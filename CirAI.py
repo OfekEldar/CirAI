@@ -69,7 +69,7 @@ with col_out:
         st.success(f"**Topology:** {res.get('topology')}")
         st.latex(f"Z(s) = {z_latex_formula}")
         units_definitions = [
-            "{id: 'f_unit', latex: 'p = 10^{-15}'}",
+            "{id: 'f_unit', latex: 'f = 10^{-15}'}",
             "{id: 'p_unit', latex: 'p = 10^{-12}'}",
             "{id: 'n_unit', latex: 'n = 10^{-9}'}",
             "{id: 'u_unit', latex: 'u = 10^{-6}'}",
