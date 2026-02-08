@@ -71,7 +71,7 @@ with col_in:
             st.error("please upload something")
         else:
             with st.spinner("Analyze..."):
-                st.session_state['res'] = analyze_circuit(img, analysis_request)
+                st.session_state['res'] = analyze_circuit(img, netlist_content, analysis_request)
 
 with col_out:
     st.header("2. Circuit Analysis")
