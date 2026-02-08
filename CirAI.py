@@ -4,16 +4,17 @@ from PIL import Image
 import json
 import re
 
-# --- הגדרות API ---
-# הערה: המפתח שלך מופיע פה, וודא שהוא פעיל ב-Google AI Studio
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
 
-def analyze_circuit(image, analysis_request):
-    model = genai.GenerativeModel('gemini-2.0-flash')
+def analyze_circuit(image, netlist_text, analysis_request):
+    model = genai.GenerativeModel('gemini-2.5-flash')
     prompt = """
     You are an expert Analog IC Design Engineer.
-    Analyze the provided circuit diagram based on the user's request: "{analysis_request}".
+    Input provided:
+        {"- An image of the schematic" if image else ""}
+        {"- A SPICE netlist describing the connectivity" if netlist_text else ""}
+    Analyze the provided circuit diagram (circuit schematic image or netlist file) based on the user's request: "{analysis_request}".
     Extract the symbolic formula for the given node or function.
     Include all elements (R, L, C).
     Include active elements (nmos, pmos etc.) model it by small signal model (current source, g_m and r_o).
@@ -24,7 +25,13 @@ def analyze_circuit(image, analysis_request):
       "zout_latex": "formula using s, R, C, L, g_m, r_o. use the Desmos calculator LaTex format only. for example: {5+a_{2}}/{s^{2}+\\\\pi*s-{1}/{5*s}}. use * for multiply, / for divition. any nominator or denominator, put in parentheses: '()'"
     }
     """
-    response = model.generate_content([prompt, image, f"Node: {analysis_request}"])
+    content_inputs = [prompt]
+    if image:
+        content_inputs.append(image)
+    if netlist_text:
+        content_inputs.append(f"Netlist Data:\n{netlist_text}")
+    response = model.generate_content(content_inputs)
+    text = response.text.replace("```json", "").replace("```", "").strip()
     match = re.search(r'\{.*\}', response.text, re.DOTALL)
     if match:
         return json.loads(match.group())
@@ -32,7 +39,7 @@ def analyze_circuit(image, analysis_request):
 
 # --- GUI ---
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
-st.title("🛠️ Analog Design Tool: Image to Interactive Math")
+st.title("CirAI:Electrical circuit Image or netlist to Interactive Math")
 
 if 'res' not in st.session_state:
     st.session_state['res'] = None
@@ -40,16 +47,31 @@ if 'res' not in st.session_state:
 col_in, col_out = st.columns([1, 1.2])
 
 with col_in:
-    st.header("1. קלט")
-    uploaded_file = st.file_uploader("העלה תמונה", type=["png", "jpg", "jpeg"])
-    analysis_request = st.text_input("צומת מטרה (למשל Vout):", value="Vout")
+    st.header("1. Input (Image or Netlist)")
+    uploaded_file = st.file_uploader("Upload circuit image", type=["png", "jpg", "jpeg"])
+    netlist_file = st.file_uploader("Upload circuit Netlist", type=["txt"])
+    analysis_request = st.text_input("Function to analyze (for example: Vout/Vin, Z(Vout) etc.):", value="Vout")
     if uploaded_file:
         img = Image.open(uploaded_file)
         # הגבלת גודל תמונה כפי שביקשת קודם
-        st.image(img, caption="המעגל המנותח", width=350)
-    if st.button("נתח מעגל"):
-        with st.spinner("Analyze..."):
-            st.session_state['res'] = analyze_circuit(img, analysis_request)
+        st.image(img, caption="The analyzed circuit", width=350)
+    else:
+        img = None
+    st.markdown("---")
+    netlist_method = st.radio("Netlist:", ["None", "Upload Netlist file", "Paste text"])
+    netlist_content = None
+    if netlist_method == "Upload Netlist file":
+        net_file = st.file_uploader("upload file .net or .sp or .txt", type=["net", "sp", "txt"])
+        if net_file:
+            netlist_content = net_file.read().decode("utf-8")
+    elif netlist_method == "Paste text":
+        netlist_content = st.text_area("Paste here(SPICE format):", height=150)
+    if st.button("GO"):
+        if not img and not netlist_content:
+            st.error("please upload something")
+        else:
+            with st.spinner("Analyze..."):
+                st.session_state['res'] = analyze_circuit(img, analysis_request)
 
 with col_out:
     st.header("2. Circuit Analysis")
