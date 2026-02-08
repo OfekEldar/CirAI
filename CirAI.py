@@ -158,4 +158,4 @@ with col_out:
                 """
         st.components.v1.html(desmos_html, height=550)
     else:
-        st.info("העלה תמונה ולחץ על 'נתח מעגל' כדי להתחיל.")
+        st.info("Upload image or netlist to start")
