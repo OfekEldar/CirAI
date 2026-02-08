@@ -9,13 +9,14 @@ import re
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
 
-def analyze_circuit(image, target_node):
+def analyze_circuit(image, analysis_request):
     model = genai.GenerativeModel('gemini-2.0-flash')
     prompt = """
     You are an expert Analog IC Design Engineer.
-    Extract the symbolic Zout formula for the given node.
+    Analyze the provided circuit diagram based on the user's request: "{analysis_request}".
+    Extract the symbolic formula for the given node or function.
     Include all elements (R, L, C).
-    Include active elements (nmos, pmos etc.) model it by small signal model (current source and ro).
+    Include active elements (nmos, pmos etc.) model it by small signal model (current source, g_m and r_o).
     Output ONLY a valid JSON object:
     {
       "topology": "Topology Name",
@@ -23,7 +24,7 @@ def analyze_circuit(image, target_node):
       "zout_latex": "formula using s, R, C, L, g_m, r_o. use the Desmos calculator LaTex format only. for example: {5+a_{2}}/{s^{2}+\\\\pi*s-{1}/{5*s}}. use * for multiply, / for divition. any nominator or denominator, put in parentheses: '()'"
     }
     """
-    response = model.generate_content([prompt, image, f"Node: {target_node}"])
+    response = model.generate_content([prompt, image, f"Node: {analysis_request}"])
     match = re.search(r'\{.*\}', response.text, re.DOTALL)
     if match:
         return json.loads(match.group())
@@ -41,17 +42,17 @@ col_in, col_out = st.columns([1, 1.2])
 with col_in:
     st.header("1. קלט")
     uploaded_file = st.file_uploader("העלה תמונה", type=["png", "jpg", "jpeg"])
-    target_node = st.text_input("צומת מטרה (למשל Vout):", value="Vout")
+    analysis_request = st.text_input("צומת מטרה (למשל Vout):", value="Vout")
     if uploaded_file:
         img = Image.open(uploaded_file)
         # הגבלת גודל תמונה כפי שביקשת קודם
         st.image(img, caption="המעגל המנותח", width=350)
     if st.button("נתח מעגל"):
         with st.spinner("Analyze..."):
-            st.session_state['res'] = analyze_circuit(img, target_node)
+            st.session_state['res'] = analyze_circuit(img, analysis_request)
 
 with col_out:
-    st.header("2. ניתוח אינטראקטיבי")
+    st.header("2. Circuit Analysis")
     st.info("**Quick Guide:**\n\n"
             "1. **Verify:** Check the formula below matches your circuit diagram.\n"
             "2. **Edit Freely:** All expressions in Desmos can be modified manually.\n"
@@ -67,9 +68,18 @@ with col_out:
         print(z_latex)
         st.success(f"**Topology:** {res.get('topology')}")
         st.latex(f"Z(s) = {z_latex_formula}")
-        
+        units_definitions = [
+            "{id: 'f_unit', latex: 'p = 10^{-15}'}",
+            "{id: 'p_unit', latex: 'p = 10^{-12}'}",
+            "{id: 'n_unit', latex: 'n = 10^{-9}'}",
+            "{id: 'u_unit', latex: 'u = 10^{-6}'}",
+            "{id: 'm_unit', latex: 'm = 10^{-3}'}",
+            "{id: 'k_unit', latex: 'k = 10^{3}'}",
+            "{id: 'M_unit', latex: 'M = 10^{6}'}",
+            "{id: 'G_unit', latex: 'G = 10^{9}'}"
+        ]
+        units_js = ",".join(units_definitions)       
 
-# --- תיקון לוגיקת Desmos ---
         desmos_html = f"""
                 <!DOCTYPE html>
                 <html>
@@ -96,17 +106,21 @@ with col_out:
                             settingsMenu: true,
                             smartGrapher: true
                         }});
-
-                        // 2. הגדרת Graph Settings (מצב מרוכב ורדיאנים)
                         calculator.updateSettings({{
                             complexMode: true,
                             degreeMode: false
                         }});
-
-                        // 3. הזנת ביטויים - שים לב לשימוש ב-IDs שונים
+                        calculator.updateSettings({{
+                            xAxisLogMode: true,  
+                            yAxisLogMode: false, 
+                            mathBounds: {{
+                                left: 1, 
+                                right: 1000000000000,  
+                                bottom: -100, 
+                                top: 60  
+                            }}
+                        }});
                         calculator.setExpression({{ id: 'j_def', latex: 'j=i' }});
-                        
-                        // הגדרת משתנה תדר s על ציר ה-x
                         calculator.setExpression({{ id: 's_def', latex: 's = i * 2 * \\\\pi * x' }});
                         calculator.setExpression({{ id: 'z_val', latex: 'Z = ' + z_from_python }});
                         calculator.setExpression({{ 
@@ -114,6 +128,8 @@ with col_out:
                             latex: '\\\real(Z)',
                             color: Desmos.Colors.BLUE 
                         }});
+                    var units = [{units_js}];
+                    units.forEach(u => calculator.setExpression(u));
                     </script>
                 </body>
                 </html>
