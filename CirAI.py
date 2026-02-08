@@ -9,9 +9,7 @@ import re
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
 
-zout_latex=0
 def analyze_circuit(image, target_node):
-    # עדכון ל-Gemini 2.0 Flash לביצועי ראייה משופרים
     model = genai.GenerativeModel('gemini-2.0-flash')
     prompt = """
     You are an expert Analog IC Design Engineer.
@@ -21,12 +19,11 @@ def analyze_circuit(image, target_node):
     Output ONLY a valid JSON object:
     {
       "topology": "Topology Name",
-      "z_latex_formula": "formula using s, R, C, L, g_m, r_o in regular LaTex format",
-      "zout_latex": "formula using s, R, C, L, g_m, r_o. use the Desmos calculator LaTex format only. for example: {5+a_{2}}/{s^{2}+\\\\pi*s-{1}/{5*s}}"
+      "z_latex_formula": "formula using s, R, C, L, g_m, r_o in regular LaTex format, The expression should be as simplified as possible. Do not use the || (parallel) symbol, but simplify the equation as much as possible. do not neglect any parameter",
+      "zout_latex": "formula using s, R, C, L, g_m, r_o. use the Desmos calculator LaTex format only. for example: {5+a_{2}}/{s^{2}+\\\\pi*s-{1}/{5*s}}. use * for multiply, / for divition. any nominator or denominator, put in parentheses: '()'"
     }
     """
     response = model.generate_content([prompt, image, f"Node: {target_node}"])
-    
     match = re.search(r'\{.*\}', response.text, re.DOTALL)
     if match:
         return json.loads(match.group())
@@ -45,12 +42,12 @@ with col_in:
     st.header("1. קלט")
     uploaded_file = st.file_uploader("העלה תמונה", type=["png", "jpg", "jpeg"])
     target_node = st.text_input("צומת מטרה (למשל Vout):", value="Vout")
-    
-    if uploaded_file and st.button("נתח מעגל"):
+    if uploaded_file:
         img = Image.open(uploaded_file)
         # הגבלת גודל תמונה כפי שביקשת קודם
         st.image(img, caption="המעגל המנותח", width=350)
-        with st.spinner("Gemini 2.0 מנתח את הטופולוגיה..."):
+    if st.button("נתח מעגל"):
+        with st.spinner("Analyze..."):
             st.session_state['res'] = analyze_circuit(img, target_node)
 
 with col_out:
@@ -63,8 +60,7 @@ with col_out:
             "5. **Analysis Commands:** Use `|Z|` (Mag), `angle(Z)` (Phase), `real(Z)` (R), and `imag(Z)` (X).\n"
             "6. **Tuning:** Enter values for $g_m, r_o, C$. Delete a parameter's definition to auto-generate a Slider.\n"
             "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \pi x$.")
-    #if st.session_state['res']:
-    if(1):
+    if st.session_state['res']:
         res = st.session_state['res']
         z_latex = res.get('zout_latex', '0')
         z_latex_formula = res.get('z_latex_formula', '0')
