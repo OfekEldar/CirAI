@@ -8,7 +8,7 @@ GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
 
 def analyze_circuit(image, netlist_text, analysis_request):
-    model = genai.GenerativeModel('deep-research-pro-preview-12-2025')
+    model = genai.GenerativeModel('gemini-3-pro-preview')
     prompt = """
     You are an expert Analog IC Design Engineer.
     Input provided:
