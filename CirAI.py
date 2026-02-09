@@ -23,6 +23,7 @@ def analyze_circuit(image, netlist_text, analysis_request):
       "topology": "Topology Name",
       "z_latex_formula": "formula using s, R, C, L, g_m, r_o in regular LaTex format, The expression should be as simplified as possible. Do not use the || (parallel) symbol, but simplify the equation as much as possible. do not neglect any parameter",
       "zout_latex": "formula using s, R, C, L, g_m, r_o. use the Desmos calculator LaTex format only. for example: {5+a_{2}}/{s^{2}+\\\\pi*s-{1}/{5*s}}. use * for multiply, / for divition. any nominator or denominator, put in parentheses: '()'"
+      "derivation_steps": "Detailed step-by-step derivation in Markdown/LaTeX. Include: 1. Small signal model used. 2. KCL/KVL equations. 3. Simplification steps."
     }
     """
     content_inputs = [prompt]
@@ -101,7 +102,16 @@ with col_out:
             "{id: 'G_unit', latex: 'G = 10^{9}'}"
         ]
         units_js = ",".join(units_definitions)       
-
+        st.markdown("---")
+        with st.expander("Watch full development"):
+            st.write("Analysis process:")
+            st.markdown(res.get('derivation_steps', "Not found"))
+            st.download_button(
+                label="Download text file",
+                data=res.get('derivation_steps', ""),
+                file_name="circuit_derivation.md",
+                mime="text/markdown"
+            )
         desmos_html = f"""
                 <!DOCTYPE html>
                 <html>
