@@ -95,7 +95,7 @@ with col_out:
         H_latex_formula = res.get('H_latex_formula', '0')
         print(z_latex)
         st.success(f"**Topology:** {res.get('topology')}")
-        st.latex(f"Z(s) = {H_latex_formula}")
+        st.latex(rf"\huge {H_latex_formula}")
         units_definitions = [
             "{id: 'f_unit', latex: 'f = 10^{-15}'}",
             "{id: 'p_unit', latex: 'p = 10^{-12}'}",
@@ -132,11 +132,7 @@ with col_out:
                     <div id="calculator"></div>
                     <script>
                         var z_from_python = "{z_latex}";
-                        
-                        // וודא שהאלמנט קיים
                         var elt = document.getElementById('calculator');
-                        
-                        // 1. יצירת המחשבון עם Configuration Options
                         var calculator = Desmos.GraphingCalculator(elt, {{
                             allowComplex: true,
                             expressions: true,
