@@ -45,7 +45,7 @@ st.title("CirAI:Electrical circuit Image or netlist to Interactive Math")
 if 'res' not in st.session_state:
     st.session_state['res'] = None
 
-col_in, col_out = st.columns([1, 1.2])
+col_in, col_out = st.columns([1, 1.8])
 
 with col_in:
     st.header("1. Input (Image or Netlist)")
@@ -54,7 +54,6 @@ with col_in:
     analysis_request = st.text_input("Function to analyze (for example: Vout/Vin, Z(Vout) etc.):", value="Vout")
     if uploaded_file:
         img = Image.open(uploaded_file)
-        # הגבלת גודל תמונה כפי שביקשת קודם
         st.image(img, caption="The analyzed circuit", width=350)
     else:
         img = None
@@ -166,6 +165,6 @@ with col_out:
                 </body>
                 </html>
                 """
-        st.components.v1.html(desmos_html, height=550)
+        st.components.v1.html(desmos_html, height=600)
     else:
         st.info("Upload image or netlist to start")
