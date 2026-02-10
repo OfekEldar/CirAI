@@ -1,6 +1,7 @@
 import streamlit as st
 import google.generativeai as genai
 from PIL import Image
+from streamlit_paste_button import paste_image_button
 import json
 import re
 
@@ -22,7 +23,7 @@ def analyze_circuit(image, netlist_text, analysis_request):
     {
       "topology": "Topology Name",
       "z_latex_formula": "formula using s, R, C, L, g_m, r_o in regular LaTex format, The expression should be as simplified as possible. Do not use the || (parallel) symbol, but simplify the equation as much as possible. do not neglect any parameter",
-      "zout_latex": "formula using s, R, C, L, g_m, r_o. use the Desmos calculator LaTex format only. for example: {5+a_{2}}/{s^{2}+\\\\pi*s-{1}/{5*s}}. use * for multiply, / for divition. any nominator or denominator, put in parentheses: '()'"
+      "H_latex": "formula using s, R, C, L, g_m, r_o. use the Desmos calculator LaTex format only. for example: {5+a_{2}}/{s^{2}+\\\\pi*s-{1}/{5*s}}. use * for multiply, / for divition. any nominator or denominator, put in parentheses: '()'. the function name will be: Z(s) if it is impedance, H(s) if it is a transfer function."
       "derivation_steps": "Detailed step-by-step derivation in Markdown/LaTeX. Include: 1. Small signal model used. 2. KCL/KVL equations. 3. Simplification steps."
     }
     """
@@ -45,16 +46,20 @@ st.title("CirAI:Electrical circuit Image or netlist to Interactive Math")
 if 'res' not in st.session_state:
     st.session_state['res'] = None
 
-col_in, col_out = st.columns([1, 1.8])
+col_in, col_out = st.columns([1, 2])
 
 with col_in:
     st.header("1. Input (Image or Netlist)")
     uploaded_file = st.file_uploader("Upload circuit image", type=["png", "jpg", "jpeg"])
+    paste_result = paste_image_button(label="Paste here", errors="ignore")
     netlist_file = st.file_uploader("Upload circuit Netlist", type=["txt"])
     analysis_request = st.text_input("Function to analyze (for example: Vout/Vin, Z(Vout) etc.):", value="Vout")
     if uploaded_file:
         img = Image.open(uploaded_file)
         st.image(img, caption="The analyzed circuit", width=350)
+    elif paste_result.image_data is not None:
+        st.write("Image pasted")
+        st.image(paste_result.image_data)
     else:
         img = None
     st.markdown("---")
@@ -85,7 +90,7 @@ with col_out:
             "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \pi x$.")
     if st.session_state['res']:
         res = st.session_state['res']
-        z_latex = res.get('zout_latex', '0')
+        z_latex = res.get('H_latex', '0')
         z_latex_formula = res.get('z_latex_formula', '0')
         print(z_latex)
         st.success(f"**Topology:** {res.get('topology')}")
