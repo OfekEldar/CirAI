@@ -22,7 +22,7 @@ def analyze_circuit(image, netlist_text, analysis_request):
     Output ONLY a valid JSON object:
     {
       "topology": "Topology Name",
-      "z_latex_formula": "formula using s, R, C, L, g_m, r_o in regular LaTex format, The expression should be as simplified as possible. Do not use the || (parallel) symbol, but simplify the equation as much as possible. do not neglect any parameter",
+      "H_latex_formula": "formula using s, R, C, L, g_m, r_o in regular LaTex format, The expression should be as simplified as possible. Do not use the || (parallel) symbol, but simplify the equation as much as possible. do not neglect any parameter",
       "H_latex": "formula using s, R, C, L, g_m, r_o. use the Desmos calculator LaTex format only. for example: {5+a_{2}}/{s^{2}+\\\\pi*s-{1}/{5*s}}. use * for multiply, / for divition. any nominator or denominator, put in parentheses: '()'. the function name will be: Z(s) if it is impedance, H(s) if it is a transfer function."
       "derivation_steps": "Detailed step-by-step derivation in Markdown/LaTeX. Include: 1. Small signal model used. 2. KCL/KVL equations. 3. Simplification steps."
     }
@@ -57,7 +57,7 @@ with col_in:
     if uploaded_file:
         img = Image.open(uploaded_file)
         st.image(img, caption="The analyzed circuit", width=350)
-    elif paste_result.image_data is not None:
+    if paste_result.image_data is not None:
         st.write("Image pasted")
         st.image(paste_result.image_data)
     else:
@@ -91,10 +91,10 @@ with col_out:
     if st.session_state['res']:
         res = st.session_state['res']
         z_latex = res.get('H_latex', '0')
-        z_latex_formula = res.get('z_latex_formula', '0')
+        H_latex_formula = res.get('H_latex_formula', '0')
         print(z_latex)
         st.success(f"**Topology:** {res.get('topology')}")
-        st.latex(f"Z(s) = {z_latex_formula}")
+        st.latex(f"Z(s) = {H_latex_formula}")
         units_definitions = [
             "{id: 'f_unit', latex: 'f = 10^{-15}'}",
             "{id: 'p_unit', latex: 'p = 10^{-12}'}",
