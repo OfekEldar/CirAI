@@ -60,6 +60,9 @@ with col_in:
     if paste_result.image_data is not None:
         st.write("Image pasted")
         st.image(paste_result.image_data)
+        img = paste_result.image_data
+    else:
+        img = None
     st.markdown("---")
     netlist_method = st.radio("Netlist:", ["None", "Upload Netlist file", "Paste text"])
     netlist_content = None
