@@ -95,7 +95,7 @@ with col_out:
         H_latex_formula = res.get('H_latex_formula', '0')
         print(z_latex)
         st.success(f"**Topology:** {res.get('topology')}")
-        st.latex(rf"\huge {H_latex_formula}")
+        st.latex(rf"\LARGE {H_latex_formula}")
         units_definitions = [
             "{id: 'f_unit', latex: 'f = 10^{-15}'}",
             "{id: 'p_unit', latex: 'p = 10^{-12}'}",
