@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desmos Circuit Calculator</title>
+    <link rel="stylesheet" href="data:text/css;base64,{css_base64}">
+</head>
+<body>
+    <div id="calculator" role="application" aria-label="Desmos Graphing Calculator"></div>
+    
+    <!-- Desmos API -->
+    <script src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=27dbc719129a4adab82767f98e6fc813"></script>
+    
+    <!-- Calculator Logic -->
+    <script>
+        {calculator_js}
+    </script>
+    
+    <!-- Initialization -->
+    <script>
+        // Initialize calculator when DOM is ready
+        document.addEventListener('DOMContentLoaded', function() {
+            const zLatex = "{z_latex}";
+            const calculatorManager = initializeCalculator(zLatex);
+            
+            // Make manager available globally for debugging
+            window.calculatorManager = calculatorManager;
+        });
+    </script>
+</body>
+</html>

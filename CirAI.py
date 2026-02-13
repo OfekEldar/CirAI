@@ -4,9 +4,45 @@ from PIL import Image
 from streamlit_paste_button import paste_image_button
 import json
 import re
+import base64
+import os
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
+
+def load_static_file(filename):
+    """Load content from static file"""
+    file_path = os.path.join('static', filename)
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        st.error(f"Static file not found: {filename}")
+        return ""
+
+def encode_css_base64(css_content):
+    """Encode CSS content as base64 for inline embedding"""
+    return base64.b64encode(css_content.encode('utf-8')).decode('utf-8')
+
+def generate_calculator_html(z_latex):
+    """Generate the calculator HTML using templates"""
+    # Load static files
+    html_template = load_static_file('desmos_calculator.html')
+    css_content = load_static_file('calculator.css')
+    js_content = load_static_file('desmos_calculator.js')
+    
+    if not all([html_template, css_content, js_content]):
+        return "<div>Error loading calculator resources</div>"
+    
+    # Encode CSS for inline embedding
+    css_base64 = encode_css_base64(css_content)
+    
+    # Replace template placeholders using string replacement (safer than .format())
+    html_content = html_template.replace('{css_base64}', css_base64)
+    html_content = html_content.replace('{calculator_js}', js_content)
+    html_content = html_content.replace('{z_latex}', z_latex)
+    
+    return html_content
 
 def analyze_circuit(image, netlist_text, analysis_request):
     model = genai.GenerativeModel('gemini-2.5-pro')
@@ -36,7 +72,16 @@ def analyze_circuit(image, netlist_text, analysis_request):
     text = response.text.replace("```json", "").replace("```", "").strip()
     match = re.search(r'\{.*\}', response.text, re.DOTALL)
     if match:
-        return json.loads(match.group())
+        try:
+            # Clean the JSON string to remove control characters
+            json_str = match.group()
+            # Remove common problematic control characters
+            json_str = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', json_str)
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            print(f"JSON parsing error: {e}")
+            print(f"Raw response: {response.text[:500]}...")
+            return None
     return None
 
 # --- GUI ---
@@ -84,11 +129,11 @@ with col_out:
     st.info("**Quick Guide:**\n\n"
             "1. **Verify:** Check the formula below matches your circuit diagram.\n"
             "2. **Edit Freely:** All expressions in Desmos can be modified manually.\n"
-            "3. **Complex Mode:** For S-domain ($s=j\omega$), go to Settings (Wrench) -> Enable 'Complex Mode'.\n"
+            "3. **Complex Mode:** For S-domain ($s=j\\omega$), go to Settings (Wrench) -> Enable 'Complex Mode'.\n"
             "4. **Bode Plots:** In Settings -> More Options, switch axes to 'Logarithmic'.\n"
             "5. **Analysis Commands:** Use `|Z|` (Mag), `angle(Z)` (Phase), `real(Z)` (R), and `imag(Z)` (X).\n"
             "6. **Tuning:** Enter values for $g_m, r_o, C$. Delete a parameter's definition to auto-generate a Slider.\n"
-            "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \pi x$.")
+            "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \\pi x$.")
     if st.session_state['res']:
         res = st.session_state['res']
         z_latex = res.get('H_latex', '0')
@@ -96,18 +141,23 @@ with col_out:
         print(z_latex)
         st.success(f"**Topology:** {res.get('topology')}")
         st.latex(rf"\large {H_latex_formula}")
-        units_definitions = [
-            "{id: 'f_unit', latex: 'f = 10^{-15}'}",
-            "{id: 'p_unit', latex: 'p = 10^{-12}'}",
-            "{id: 'n_unit', latex: 'n = 10^{-9}'}",
-            "{id: 'u_unit', latex: 'u = 10^{-6}'}",
-            "{id: 'm_unit', latex: 'm = 10^{-3}'}",
-            "{id: 'k_unit', latex: 'k = 10^{3}'}",
-            "{id: 'M_unit', latex: 'M = 10^{6}'}",
-            "{id: 'G_unit', latex: 'G = 10^{9}'}"
-        ]
-        units_js = ",".join(units_definitions)       
+       
         st.markdown("---")
+        st.info("**Debugging:** Open browser console (F12) to see detailed calculator initialization logs and verify settings are applied correctly.")
+        with st.expander("🔧 Debugging Information"):
+            st.markdown("""
+            **To debug the calculator:**
+            1. Open browser Developer Tools (F12)
+            2. Go to the Console tab
+            3. Look for initialization messages starting with "Initializing Desmos Calculator..."
+            4. Check if settings are applied successfully
+            5. Use `window.desmosCalc` in console to access the calculator object directly
+            
+            **Common issues:**
+            - Settings not applied: Check console for error messages
+            - Graph not displaying correctly: Verify complex mode is enabled
+            - Axis issues: Check if log mode settings were applied
+            """)
         with st.expander("Watch full development"):
             st.write("Analysis process:")
             st.markdown(res.get('derivation_steps', "Not found"))
@@ -117,56 +167,8 @@ with col_out:
                 file_name="circuit_derivation.md",
                 mime="text/markdown"
             )
-        desmos_html = f"""
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="utf-8">
-                    <style>
-                        html, body {{ margin: 0; padding: 0; height: 100%; width: 100%; }}
-                        #calculator {{ width: 100%; height: 500px; }}
-                    </style>
-                    <script src="https://www.desmos.com/api/v1.11/calculator.js?apiKey=27dbc719129a4adab82767f98e6fc813"></script>
-                </head>
-                <body>
-                    <div id="calculator"></div>
-                    <script>
-                        var z_from_python = "{z_latex}";
-                        var elt = document.getElementById('calculator');
-                        var calculator = Desmos.GraphingCalculator(elt, {{
-                            allowComplex: true,
-                            expressions: true,
-                            settingsMenu: true,
-                            smartGrapher: true
-                        }});
-                        calculator.updateSettings({{
-                            complexMode: true,
-                            degreeMode: false
-                        }});
-                        calculator.updateSettings({{
-                            xAxisLogMode: true,  
-                            yAxisLogMode: false, 
-                            mathBounds: {{
-                                left: 1, 
-                                right: 1000000000000,  
-                                bottom: -100, 
-                                top: 60  
-                            }}
-                        }});
-                        calculator.setExpression({{ id: 'j_def', latex: 'j=i' }});
-                        calculator.setExpression({{ id: 's_def', latex: 's = i * 2 * \\\\pi * x' }});
-                        calculator.setExpression({{ id: 'z_val', latex: 'Z = ' + z_from_python }});
-                        calculator.setExpression({{ 
-                            id: 'real_z', 
-                            latex: '\\\real(Z)',
-                            color: Desmos.Colors.BLUE 
-                        }});
-                    var units = [{units_js}];
-                    units.forEach(u => calculator.setExpression(u));
-                    </script>
-                </body>
-                </html>
-                """
-        st.components.v1.html(desmos_html, height=600)
+        # Generate calculator HTML using template
+        calculator_html = generate_calculator_html(z_latex)
+        st.components.v1.html(calculator_html, height=600)
     else:
         st.info("Upload image or netlist to start")
