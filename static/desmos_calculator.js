@@ -166,6 +166,7 @@ class DesmosCalculatorManager {
     addCoreExpressions() {
         const coreExpressions = [
             {id: 's_def', latex: 's = i * 2 * \\pi * x'},
+            {id: 'f', latex: '\\frac{1}{1+sRC}'},
             {id: 'z_val', latex: `Z = ${this.zLatex}`},
             {id: 'z_abs', latex: '\\left|Z\\right|'},
         ];
