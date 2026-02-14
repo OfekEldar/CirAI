@@ -165,8 +165,7 @@ class DesmosCalculatorManager {
      */
     addCoreExpressions() {
         const coreExpressions = [
-            {id: 'j_def', latex: 'j=i'},
-            {id: 's_def', latex: 's = i * 2 * \\pi * x'},
+            {id: 's_def', latex: 's = i * 2 * \\\\pi * x'},
             {id: 'z_val', latex: `Z = ${this.zLatex}`},
             {
                 id: 'real_z',
@@ -206,9 +205,6 @@ class DesmosCalculatorManager {
     }
 }
 
-/**
- * Initialize calculator when DOM is ready
- */
 function initializeCalculator(zLatex) {
     const manager = new DesmosCalculatorManager('calculator', zLatex);
     manager.init();
