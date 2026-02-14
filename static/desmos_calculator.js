@@ -167,6 +167,7 @@ class DesmosCalculatorManager {
         const coreExpressions = [
             {id: 's_def', latex: 's = i * 2 * \\pi * x'},
             {id: 'z_val', latex: `Z = ${this.zLatex}`},
+            {id: 'z_abs', latex: '|Z|'},
             {
                 id: 'real_z',
                 latex: '\\real(Z)',
