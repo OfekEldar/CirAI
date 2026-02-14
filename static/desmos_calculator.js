@@ -105,7 +105,7 @@ class DesmosCalculatorManager {
     applySettingsIndividually() {
         const settingsToTry = [
             {setting: {degreeMode: false}, name: 'Degree mode'},
-            {setting: {xAxisScale: 'logarithmic'}, name: 'X-axis logarithmic scale'}
+            {setting: {xAxisScale: 'logarithmic'}, name: 'X-axis logarithmic scale'},
             {setting: {xAxisLabel: 'Frequency [Hz]'}, name: 'X-axis logarithmic scale'}
         ];
 
