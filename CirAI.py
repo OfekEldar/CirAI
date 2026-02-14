@@ -102,12 +102,12 @@ with col_in:
     if uploaded_file:
         img = Image.open(uploaded_file)
         st.image(img, caption="The analyzed circuit", width=350)
+    else:
+        img = None
     if paste_result.image_data is not None:
         st.write("Image pasted")
         st.image(paste_result.image_data)
         img = paste_result.image_data
-    else:
-        img = None
     st.markdown("---")
     netlist_method = st.radio("Netlist:", ["None", "Upload Netlist file", "Paste text"])
     netlist_content = None
@@ -134,6 +134,9 @@ with col_out:
             "5. **Analysis Commands:** Use `|Z|` (Mag), `angle(Z)` (Phase), `real(Z)` (R), and `imag(Z)` (X).\n"
             "6. **Tuning:** Enter values for $g_m, r_o, C$. Delete a parameter's definition to auto-generate a Slider.\n"
             "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \\pi x$.")
+    z_init = "1/(1+s)"
+    calculator_html = generate_calculator_html(z_init)
+    st.components.v1.html(calculator_html, height=600)
     if st.session_state['res']:
         res = st.session_state['res']
         z_latex = res.get('H_latex', '0')
