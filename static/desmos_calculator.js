@@ -17,10 +17,10 @@ const DEFAULT_SETTINGS = {
 };
 
 const DEFAULT_BOUNDS = {
-    left: 100,
+    left: 10000,
     right: 10000000000,
-    bottom: -10,
-    top: 10
+    bottom: -5,
+    top: 5
 };
 
 // Unit definitions for engineering notation
@@ -170,6 +170,7 @@ class DesmosCalculatorManager {
             {id: 'Ce', latex: 'C_{e} = 1p'},
             /*{id: 'z_val', latex: `Z = ${this.zLatex}`},*/
             {id: 'z_abs', latex: '\\left|Z\\right|'},
+            {id: 'z_phase', latex: '\arctan\left(\frac{\operatorname{imag}\left(Z\right)}{\operatorname{real}\left(Z\right)}\right)'},
             {id: 's_def', latex: 's = i * 2 * \\pi * x'}
         ];
 
