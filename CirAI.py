@@ -6,7 +6,7 @@ import json
 import re
 import base64
 import os
-
+i = 9
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
 
