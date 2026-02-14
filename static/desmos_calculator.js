@@ -168,11 +168,6 @@ class DesmosCalculatorManager {
             {id: 's_def', latex: 's = i * 2 * \\pi * x'},
             {id: 'z_val', latex: `Z = ${this.zLatex}`},
             {id: 'z_abs', latex: '\\left|Z\\right|'},
-            {
-                id: 'real_z',
-                latex: '\\real(Z)',
-                color: Desmos.Colors.BLUE
-            }
         ];
 
         coreExpressions.forEach(expr => {
