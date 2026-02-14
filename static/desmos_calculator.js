@@ -165,12 +165,12 @@ class DesmosCalculatorManager {
      */
     addCoreExpressions() {
         const coreExpressions = [
-            {id: 's_def', latex: 's = i * 2 * \\pi * x'},
-            {id: 'f', latex: '\\frac{1}{1+sR_{e}C_{e}}'},
+            {id: 'f', latex: 'Z = \\frac{1}{1+sR_{e}C_{e}}'},
             {id: 'Re', latex: 'R_{e} = 10k'},
             {id: 'Ce', latex: 'C_{e} = 1p'},
             {id: 'z_val', latex: `Z = ${this.zLatex}`},
             {id: 'z_abs', latex: '\\left|Z\\right|'},
+            {id: 's_def', latex: 's = i * 2 * \\pi * x'}
         ];
 
         coreExpressions.forEach(expr => {
