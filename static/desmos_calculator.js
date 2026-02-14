@@ -13,7 +13,9 @@ const CALCULATOR_CONFIG = {
 const DEFAULT_SETTINGS = {
     degreeMode: false,
     xAxisScale: 'logarithmic',
-    yAxisScale: 'linear'
+    yAxisScale: 'linear',
+    xAxisLabel: 'Frequency [Hz]',
+    yAxisLabel: 'Magnitude \ Phase'
 };
 
 const DEFAULT_BOUNDS = {
