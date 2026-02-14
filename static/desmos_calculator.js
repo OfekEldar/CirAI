@@ -166,8 +166,8 @@ class DesmosCalculatorManager {
     addCoreExpressions() {
         const coreExpressions = [
             {id: 'f', latex: 'Z = \\frac{1}{1+sR_{e}C_{e}}'},
-            {id: 'Re', latex: 'R_{e} = 10k'},
-            {id: 'Ce', latex: 'C_{e} = 1p'},
+            {id: 'slider1', latex: 'R_{e} = 10k', sliderBounds: {min: 0.1,max: 100000000,step: 1}},
+            {id: 'slider2', latex: 'C_{e} = 1p', sliderBounds: {min: 1e-15,max: 100e-12,step: 1}},
             /*{id: 'z_val', latex: `Z = ${this.zLatex}`},*/
             {id: 'z_abs', latex: '\\left|Z\\right|'},
             {id: 'z_phase', latex: '\\arctan\\left(\\frac{\\operatorname{imag}\\left(Z\\right)}{\\operatorname{real}\\left(Z\\right)}\\right)'},
