@@ -170,7 +170,7 @@ class DesmosCalculatorManager {
             {id: 'Ce', latex: 'C_{e} = 1p'},
             /*{id: 'z_val', latex: `Z = ${this.zLatex}`},*/
             {id: 'z_abs', latex: '\\left|Z\\right|'},
-            {id: 'z_phase', latex: '\arctan\left(\frac{\operatorname{imag}\left(Z\right)}{\operatorname{real}\left(Z\right)}\right)'},
+            {id: 'z_phase', latex: '\\arctan\\left(\\frac{\\operatorname{imag}\\left(Z\\right)}{\\operatorname{real}\\left(Z\\right)}\\right)'},
             {id: 's_def', latex: 's = i * 2 * \\pi * x'}
         ];
 
