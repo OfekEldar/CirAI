@@ -134,7 +134,7 @@ with col_out:
             "5. **Analysis Commands:** Use `|Z|` (Mag), `angle(Z)` (Phase), `real(Z)` (R), and `imag(Z)` (X).\n"
             "6. **Tuning:** Enter values for $g_m, r_o, C$. Delete a parameter's definition to auto-generate a Slider.\n"
             "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \\pi x$.")
-    z_init = "1/(1+sRC)"
+    z_init = "\\frac{1}{1+sRC}"
     calculator_html = generate_calculator_html(z_init)
     st.components.v1.html(calculator_html, height=600)
     if st.session_state['res']:
