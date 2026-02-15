@@ -51,7 +51,7 @@ def analyze_circuit(image, netlist_text, analysis_request):
     Input provided:
         {"- An image of the schematic" if image else ""}
         {"- A SPICE netlist describing the connectivity" if netlist_text else ""}
-    Analyze the provided circuit diagram (circuit schematic image or netlist file) based on the user's request: "{analysis_request}". (can be Z(Vout), Vout/Vin, Vout/Vcc etc.).
+    Analyze the provided circuit diagram (circuit schematic image or netlist file) **based only on the user's request: "{analysis_request}"**. (can be Z(Vout), Vout/Vin, Vout/Vcc etc.).
     Extract the symbolic formula for the given node or function.
     Include all elements (R, L, C).
     Include active elements (nmos, pmos etc.) model it by small signal model (current source, g_m and r_o).
@@ -179,6 +179,7 @@ with col_out:
     else:
 
         st.info("Upload image or netlist to start")
+
 
 
 
