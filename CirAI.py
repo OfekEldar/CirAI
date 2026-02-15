@@ -135,6 +135,8 @@ with col_out:
             "6. **Tuning:** Enter values for $g_m, r_o, C$. Delete a parameter's definition to auto-generate a Slider.\n"
             "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \\pi x$.")
     z_init = '1/(1+sRC)'
+    example_img = "LPF.jpg"
+    st.image(example_img, caption="Example circuit analysis", width=350)
     calculator_html = generate_calculator_html(z_init)
     st.components.v1.html(calculator_html, height=600)
     if st.session_state['res']:
@@ -174,4 +176,5 @@ with col_out:
         calculator_html = generate_calculator_html(z_latex)
         st.components.v1.html(calculator_html, height=600)
     else:
+
         st.info("Upload image or netlist to start")
