@@ -169,7 +169,7 @@ class DesmosCalculatorManager {
     addCoreExpressions() {
         const coreExpressions = [
             {id: 'Z', latex: '{z_latex}'},
-            {id: 'f', latex: 'f = \\frac{1}{1+sR_{e}C_{e}}'},
+            {id: 'f', latex: 'f_{z} = \\frac{1}{1+sR_{e}C_{e}}'},
             {id: 'slider1', latex: 'R_{e}=100', sliderBounds: {min: 100000,max: 1000000,step: 1}},
             {id: 'slider2', latex: 'C_{e} = 1p'},
             /*{id: 'z_val', latex: `Z = ${this.zLatex}`},*/
@@ -215,4 +215,5 @@ function initializeCalculator(zLatex) {
     return manager;
 
 }
+
 
