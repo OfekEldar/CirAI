@@ -134,12 +134,13 @@ with col_out:
             "5. **Analysis Commands:** Use `|Z|` (Mag), `angle(Z)` (Phase), `real(Z)` (R), and `imag(Z)` (X).\n"
             "6. **Tuning:** Enter values for $g_m, r_o, C$. Delete a parameter's definition to auto-generate a Slider.\n"
             "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \\pi x$.")
-    z_init = '1/(1+sRC)'
-    example_img = "LPF.jpg"
-    st.image(example_img, caption="Example circuit analysis", width=350)
-    calculator_html = generate_calculator_html(z_init)
-    st.components.v1.html(calculator_html, height=600)
-    if st.session_state['res']:
+    if st.session_state['res'] == None:
+        z_init = '1/(1+sRC)'
+        example_img = "LPF.jpg"
+        st.image(example_img, caption="Example circuit analysis", width=350)
+        calculator_html = generate_calculator_html(z_init)
+        st.components.v1.html(calculator_html, height=600)
+    elif st.session_state['res']:
         res = st.session_state['res']
         z_latex = res.get('H_latex', '0')
         H_latex_formula = res.get('H_latex_formula', '0')
@@ -178,5 +179,6 @@ with col_out:
     else:
 
         st.info("Upload image or netlist to start")
+
 
 
