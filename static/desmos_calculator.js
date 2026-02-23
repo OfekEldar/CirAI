@@ -63,7 +63,10 @@ class DesmosCalculatorManager {
         }
 
         this.calculator = Desmos.GraphingCalculator(element, CALCULATOR_CONFIG);
-        
+        let state = this.calculator.getState();
+        if (!state.graph) state.graph = {};
+        state.graph.complexMode = true;
+        this.calculator.setState(state);
         // Make calculator available globally for debugging
         window.desmosCalc = this.calculator;
         console.log('Calculator object available as window.desmosCalc for debugging');
