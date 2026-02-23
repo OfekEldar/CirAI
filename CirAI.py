@@ -50,7 +50,6 @@ def generate_calculator_html(z_latex):
     return html_content
 
 def electrical_advisor(image, topology, analysis_request, circuit_uses):
-    electrical_advisor_flag = 1
     prompt = """
     You are an expert Analog IC Design Engineer.
     Input provided:
@@ -64,7 +63,7 @@ def electrical_advisor(image, topology, analysis_request, circuit_uses):
         "performance_advice": "Detailed advice on improving performance",
         "power_advice": "Detailed advice on reducing power consumption",
         "noise_advice": "Detailed advice on minimizing noise",
-        "component_advice": "Specific recommendations for component selection and values"
+        "component_advice": "Specific recommendations for component selection and values",
         "Recommended_articles_links": "Article 1, Article 2, Article 3, ... based on IEEE, JSSC and other reputable sources" 
     }
     """
@@ -172,7 +171,8 @@ st.title("CirAI:Electrical circuit Image or netlist to Interactive Math")
 
 if 'res' not in st.session_state:
     st.session_state['res'] = None
-
+if 'advisor_res' not in st.session_state:
+    st.session_state['advisor_res'] = None
 col_in, col_out = st.columns([1, 2])
 
 with col_in:
@@ -260,25 +260,24 @@ with col_out:
         st.components.v1.html(calculator_html, height=600)
         circuit_uses = st.text_area("Describe the use cases of the circuit (for example: low noise amplifier for 1GHz, power amplifier for 100MHz etc.):", height=150)
         if st.button("AI Circuit Advisor"):
-            electrical_advisor_flag = 1
             if not img:
                 st.error("please upload something")
             else:
-                with st.spinner("Analyze..."):
-                    st.session_state['res'] = electrical_advisor(img, topology, analysis_request, circuit_uses)
-                    performance_advice = res.get('performance_advice', "Not found")
-                    power_advice = res.get('power_advice', "Not found")
-                    noise_advice = res.get('noise_advice', "Not found")
-                    component_advice = res.get('component_advice', "Not found")
-                    Recommended_articles_links = res.get('Recommended_articles_links', "Not found")
-            with st.expander("AI Electrical Advisor - Detailed Recommendations and Derivation"):
-                st.write("Analysis process:")
-                st.markdown(performance_advice)
-                st.markdown(power_advice)
-                st.markdown(noise_advice)
-                st.markdown(component_advice)
+                with st.spinner("Analyzing circuit use cases..."):
+                    st.session_state['advisor_res'] = electrical_advisor(img, topology, analysis_request, circuit_uses)
+        if st.session_state['advisor_res']:
+            adv = st.session_state['advisor_res']
+            with st.expander("AI Electrical Advisor - Detailed Recommendations and Derivation", expanded=True):
+                st.markdown("**Performance Advice:**")
+                st.markdown(adv.get('performance_advice', "Not found"))
+                st.markdown("**Power Advice:**")
+                st.markdown(adv.get('power_advice', "Not found"))
+                st.markdown("**Noise Advice:**")
+                st.markdown(adv.get('noise_advice', "Not found"))
+                st.markdown("**Component Advice:**")
+                st.markdown(adv.get('component_advice', "Not found"))
                 st.markdown("**Recommended Articles:**")
-                st.markdown(Recommended_articles_links)
+                st.markdown(adv.get('Recommended_articles_links', "Not found"))
     else:
         st.info("Upload image or netlist to start")
 
