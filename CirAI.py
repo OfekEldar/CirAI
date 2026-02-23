@@ -300,8 +300,6 @@ with col_out:
         st.info("Upload image or netlist to start")
 
 # --- Analog/RF Expert Chatbot (Sidebar) ---
-
-# 1. אתחול היסטוריית השיחה בזיכרון
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
 
