@@ -9,6 +9,7 @@ import os
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
+electrical_advisor_flag = 0
 
 def load_static_file(filename):
     """Load content from static file"""
@@ -44,6 +45,49 @@ def generate_calculator_html(z_latex):
     
     return html_content
 
+def electrical_advisor(image, topology, analysis_request, circuit_uses):
+    electrical_advisor_flag = 1
+    model = genai.GenerativeModel('gemini-2.5-pro')
+    prompt = f"""
+    You are an expert Analog IC Design Engineer.
+    Input provided:
+        {"- An image of the schematic" if image else ""}
+        {"- Analysis request: " + analysis_request if image else ""}
+        {"- Circuit use cases: " + circuit_uses if circuit_uses else ""}
+    Based on the provided circuit diagram and analysis request, provide detailed advice on how to optimize the circuit for the specified use cases.
+    Consider factors such as performance, power consumption, noise, and component selection. Provide specific recommendations for improving the circuit design to better meet the requirements of the use cases.
+    Output ONLY a valid JSON object:
+    {
+        "performance_advice": "Detailed advice on improving performance",
+        "power_advice": "Detailed advice on reducing power consumption",
+        "noise_advice": "Detailed advice on minimizing noise",
+        "component_advice": "Specific recommendations for component selection and values"
+        "Recommended_articles_links": "Article 1, Article 2, Article 3, ... based on IEEE, JSSC and other reputable sources" 
+    }
+    """
+    content_inputs = [prompt]
+    if image:
+        content_inputs.append(image)
+    if circuit_uses:
+        content_inputs.append(f"Circuit Use Cases:\n{circuit_uses}")   
+    if analysis_request:
+        content_inputs.append(f"Analysis Request:\n{analysis_request}")
+    response = model.generate_content(content_inputs)
+    text = response.text.replace("```json", "").replace("```", "").strip()
+    match = re.search(r'\{.*\}', response.text, re.DOTALL)
+    if match:
+        try:
+            # Clean the JSON string to remove control characters
+            json_str = match.group()
+            # Remove common problematic control characters
+            json_str = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', json_str)
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            print(f"JSON parsing error: {e}")
+            print(f"Raw response: {response.text[:500]}...")
+            return None
+    return None 
+
 def analyze_circuit(image, netlist_text, analysis_request):
     model = genai.GenerativeModel('gemini-2.5-pro')
     prompt = """
@@ -67,7 +111,10 @@ def analyze_circuit(image, netlist_text, analysis_request):
     if image:
         content_inputs.append(image)
     if netlist_text:
-        content_inputs.append(f"Netlist Data:\n{netlist_text}")
+        pass
+        #content_inputs.append(f"Netlist Data:\n{netlist_text}")
+    if analysis_request:
+        content_inputs.append(f"Analysis Request:\n{analysis_request}")
     response = model.generate_content(content_inputs)
     text = response.text.replace("```json", "").replace("```", "").strip()
     match = re.search(r'\{.*\}', response.text, re.DOTALL)
@@ -154,6 +201,14 @@ with col_in:
         else:
             with st.spinner("Analyze..."):
                 st.session_state['res'] = analyze_circuit(img, netlist_content, analysis_request)
+    if st.session_state['res'] != None:
+        if st.button("AI Circuit Advisor"):
+            circuit_uses = st.text_area("Describe the use cases of the circuit (for example: low noise amplifier for 1GHz, power amplifier for 100MHz etc.):", height=150)
+            if not img:
+                st.error("please upload something")
+            else:
+                with st.spinner("Analyze..."):
+                    st.session_state['res'] = electrical_advisor(img, st.session_state['res'].get('topology', 'Unknown'), analysis_request, circuit_uses)
 
 with col_out:
     st.header("2. Circuit Analysis")
@@ -166,19 +221,18 @@ with col_out:
             "6. **Tuning:** Enter values for $g_m, r_o, C$. Delete a parameter's definition to auto-generate a Slider.\n"
             "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \\pi x$.")
     if st.session_state['res'] == None:
-        z_init = '1/(1+sRC)'
+        z_init = 'Z(s) = 0'  # Default initial expression
         example_img = "LPF.jpg"
         st.image(example_img, caption="Example circuit analysis", width=350)
         calculator_html = generate_calculator_html(z_init)
         st.components.v1.html(calculator_html, height=600)
-    elif st.session_state['res']:
+    elif st.session_state['res'] and electrical_advisor_flag == 0:
         res = st.session_state['res']
         z_latex = res.get('H_latex', '0')
         H_latex_formula = res.get('H_latex_formula', '0')
         print(z_latex)
         st.success(f"**Topology:** {res.get('topology')}")
         st.latex(rf"\large {H_latex_formula}")
-       
         st.markdown("---")
         st.info("**Debugging:** Open browser console (F12) to see detailed calculator initialization logs and verify settings are applied correctly.")
         with st.expander("🔧 Debugging Information"):
@@ -207,8 +261,12 @@ with col_out:
         # Generate calculator HTML using template
         calculator_html = generate_calculator_html(z_latex)
         st.components.v1.html(calculator_html, height=600)
+        if electrical_advisor_flag == 1:
+            with st.expander("AI Electrical Advisor - Detailed Recommendations and Derivation"):
+                st.write("Analysis process:")
+                st.markdown(res.get('advisor_output', "Not found"))
+                st.link(res.get('Recommended_articles_links', "#"), "Recommended Articles")
     else:
-
         st.info("Upload image or netlist to start")
 
 
