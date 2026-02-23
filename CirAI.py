@@ -262,7 +262,21 @@ with col_out:
         calculator_html = generate_calculator_html(z_latex)
         st.components.v1.html(calculator_html, height=600)
         st.markdown("---")
-        circuit_uses = st.text_area("Describe the use cases of the circuit (for example: low noise amplifier for 1GHz, power amplifier for 100MHz etc.):", height=500)
+        st.markdown(
+            """
+            <style>
+            .stTextArea label p {
+                font-size: 20px !important;
+                font-weight: 600 !important;
+            }
+            .stTextArea textarea {
+                font-size: 18px !important;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True
+        )
+        circuit_uses = st.text_area("Describe the use cases of the circuit (for example: low noise amplifier for 1GHz, power amplifier for 100MHz etc.):", height=150)
         if st.button("AI Circuit Advisor"):
             if not img:
                 st.error("please upload something")
