@@ -198,6 +198,9 @@ class DesmosCalculatorManager {
                 console.error(`Unit ${index + 1} failed:`, e);
             }
         });
+        let state = calculator.getState();
+        state.expressions.list = state.expressions.list.concat(UNIT_DEFINITIONS);
+        calculator.setState(state);
     }
 
     /**
