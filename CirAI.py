@@ -84,6 +84,37 @@ def analyze_circuit(image, netlist_text, analysis_request):
             return None
     return None
 
+def assign_param_bounds(param_list):
+    bounds_config = {
+        'gm': (1e-3, 500e-3),
+        'R':  (1, 1000),
+        'C':  (1e-15, 10e-12),
+        'L':  (50e-12, 500e-12),
+        'ro': (1,10000),
+        'A': (0.1,100000)
+    }  
+    result = []
+    for param in param_list:
+        name = str(param) 
+        min_val, max_val = 0, 0 
+        if name.startswith('gm'):
+            min_val, max_val = bounds_config['gm']
+        elif name.startswith('R'):
+            min_val, max_val = bounds_config['R']
+        elif name.startswith('C'):
+            min_val, max_val = bounds_config['C']
+        elif name.startswith('L'):
+            min_val, max_val = bounds_config['L']
+        elif name.startswith('ro'):
+            min_val, max_val = bounds_config['ro']
+        elif name.startswith('A'):
+            min_val, max_val = bounds_config['A']    
+        else:
+            print(f"Warning: Unknown parameter type for '{name}'")
+            continue 
+        result.append([name, min_val, max_val])
+    return result
+
 # --- GUI ---
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
 st.title("CirAI:Electrical circuit Image or netlist to Interactive Math")

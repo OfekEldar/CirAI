@@ -168,14 +168,17 @@ class DesmosCalculatorManager {
      */
     addCoreExpressions() {
         const coreExpressions = [
-            {id: 'Z', latex: '{z_latex}'},
+            {id: 'expressions', type: 'folder', title: 'expressions'},
+            {id: 'params', type: 'folder', title: 'Params'},
+            {id: 'units', type: 'folder', title: 'Units'},
+            {id: 'Z', latex: '{z_latex}', folderId: 'expressions'},
             {id: 'f', latex: 'f_{z} = \\frac{1}{1+sR_{e}C_{e}}'},
-            {id: 'slider1', latex: 'R_{e}=100', sliderBounds: {min: 100000,max: 1000000,step: 1}},
-            {id: 'slider2', latex: 'C_{e} = 1p'},
+            {id: 'slider1', latex: 'R_{e}=100', sliderBounds: {min: 100000,max: 1000000,step: 1}, folderId: 'params'},
+            {id: 'slider2', latex: 'C_{e} = 1p', folderId: 'params'},
             /*{id: 'z_val', latex: `Z = ${this.zLatex}`},*/
-            {id: 'z_abs', latex: '\\left|f_{z}\\right|'},
-            {id: 'z_phase', latex: '\\arctan\\left(\\frac{\\operatorname{imag}\\left(f_{z}\\right)}{\\operatorname{real}\\left(f_{z}\\right)}\\right)'},
-            {id: 's_def', latex: 's = i * 2 * \\pi * x'}
+            {id: 'z_abs', latex: '\\left|f_{z}\\right|', folderId: 'expressions'},
+            {id: 'z_phase', latex: '\\arctan\\left(\\frac{\\operatorname{imag}\\left(f_{z}\\right)}{\\operatorname{real}\\left(f_{z}\\right)}\\right)', folderId: 'expressions'},
+            {id: 's_def', latex: 's = i * 2 * \\pi * x', folderId: 'expressions'}
         ];
 
         coreExpressions.forEach(expr => {
