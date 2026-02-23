@@ -1,4 +1,10 @@
-<iframe width="700px" height="400px" src="https://embed.app.guidde.com/playbooks/oqC9ez63Exs4ZjL6giB7Lf?mode=videoOnly" title="Analyze Analog RF Circuits Using CirAI Interactive Features" frameborder="0" referrerpolicy="unsafe-url" allowfullscreen="true" allow="clipboard-write" sandbox="allow-popups allow-popups-to-escape-sandbox allow-scripts allow-forms allow-same-origin allow-presentation" style="border-radius: 10px"></iframe>
+import streamlit as st
+import streamlit.components.v1 as components
+
+def show_guidde_video():
+    with st.expander("Quick Guide: How to use the calculator", expanded=True):
+        guidde_embed_code = """
+       <iframe width="700px" height="400px" src="https://embed.app.guidde.com/playbooks/oqC9ez63Exs4ZjL6giB7Lf?mode=videoOnly" title="Analyze Analog RF Circuits Using CirAI Interactive Features" frameborder="0" referrerpolicy="unsafe-url" allowfullscreen="true" allow="clipboard-write" sandbox="allow-popups allow-popups-to-escape-sandbox allow-scripts allow-forms allow-same-origin allow-presentation" style="border-radius: 10px"></iframe>
 <div style="display: none">
  <p>00:00: Hi. This video showcases how CirAI simplifies the analysis of Analog and RF circuits by converting images or netlists into interactive mathematical models. You will see how to upload circuit data, configure analysis parameters, and receive AI-driven performance advice to optimize your designs.</p>
  <p>00:18: The left column is the input. you can insert image file or a netlist file.</p>
@@ -34,3 +40,6 @@
  <p>03:43: After few seconds, the assistant will write the answer in the same place.</p>
  <p>03:47: This videodemonstrated how to use CirAI to analyze Analog and RF circuits by uploading circuit images, configuring analysis parameters, and leveraging AI-driven advice to optimize your designs. You can now confidently apply these features to streamline your circuit evaluation process and improve performance. Thanks for watching and good luck.</p>
 </div>
+
+        """
+        components.html(guidde_embed_code, height=400)

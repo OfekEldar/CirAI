@@ -6,6 +6,7 @@ import json
 import re
 import base64
 import os
+from video import show_guidde_video
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
@@ -28,10 +29,6 @@ def load_static_file(filename):
 def encode_css_base64(css_content):
     """Encode CSS content as base64 for inline embedding"""
     return base64.b64encode(css_content.encode('utf-8')).decode('utf-8')
-
-def load_video_guide():
-    video_html = load_static_file('video.html')
-    return video_html
 
 def generate_calculator_html(z_latex):
     """Generate the calculator HTML using templates"""
@@ -213,7 +210,8 @@ with col_in:
             with st.spinner("Analyze..."):
                 st.session_state['res'] = analyze_circuit(img, netlist_content, analysis_request, derivation_steps_flag)
     with st.expander("Quick Guide: How to use the calculator", expanded=False):
-        st.components.html(load_video_guide(), height=400)
+        st.write("Watch the video guide for a comprehensive walkthrough of using the calculator, including uploading circuit data, configuring analysis parameters, and interpreting results.")
+        show_guidde_video()
 with col_out:
     st.header("2. Circuit Analysis")
     st.info("**Quick Guide:**\n\n"
