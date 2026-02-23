@@ -220,7 +220,7 @@ with col_out:
         st.image(example_img, caption="Example circuit analysis", width=350)
         calculator_html = generate_calculator_html(z_init)
         st.components.v1.html(calculator_html, height=600)
-    elif st.session_state['res'] and electrical_advisor_flag == 0:
+    elif st.session_state['res']:
         res = st.session_state['res']
         z_latex = res.get('H_latex', '0')
         H_latex_formula = res.get('H_latex_formula', '0')
@@ -256,13 +256,14 @@ with col_out:
         # Generate calculator HTML using template
         calculator_html = generate_calculator_html(z_latex)
         st.components.v1.html(calculator_html, height=600)
-    if st.session_state['res'] != None:
+        circuit_uses = st.text_area("Describe the use cases of the circuit (for example: low noise amplifier for 1GHz, power amplifier for 100MHz etc.):", height=150)
         if st.button("AI Circuit Advisor"):
-            circuit_uses = st.text_area("Describe the use cases of the circuit (for example: low noise amplifier for 1GHz, power amplifier for 100MHz etc.):", height=150)
+            electrical_advisor_flag = 1
             if not img:
                 st.error("please upload something")
             else:
                 with st.spinner("Analyze..."):
+
                     st.session_state['res'] = electrical_advisor(img, topology=topology, analysis_request=analysis_request, circuit_uses=circuit_uses)
         if electrical_advisor_flag == 1:
             with st.expander("AI Electrical Advisor - Detailed Recommendations and Derivation"):
