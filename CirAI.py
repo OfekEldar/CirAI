@@ -13,6 +13,7 @@ electrical_advisor_flag = 0
 derivation_steps_flag = 0
 img, topology, analysis_request, circuit_uses = None, None, None, None
 performance_advice, power_advice, noise_advice, component_advice, Recommended_articles_links = None, None, None, None, None
+model = genai.GenerativeModel('gemini-2.5-pro')
 
 def load_static_file(filename):
     """Load content from static file"""
@@ -50,7 +51,6 @@ def generate_calculator_html(z_latex):
 
 def electrical_advisor(image, topology, analysis_request, circuit_uses):
     electrical_advisor_flag = 1
-    model = genai.GenerativeModel('gemini-2.5-pro')
     prompt = """
     You are an expert Analog IC Design Engineer.
     Input provided:
@@ -71,10 +71,10 @@ def electrical_advisor(image, topology, analysis_request, circuit_uses):
     content_inputs = [prompt]
     if image:
         content_inputs.append(image)
-    if circuit_uses:
-        content_inputs.append(f"Circuit Use Cases:\n{circuit_uses}")   
     if analysis_request:
         content_inputs.append(f"Analysis Request:\n{analysis_request}")
+    if circuit_uses:
+        content_inputs.append(f"Circuit Use Cases:\n{circuit_uses}")   
     response = model.generate_content(content_inputs)
     text = response.text.replace("```json", "").replace("```", "").strip()
     match = re.search(r'\{.*\}', response.text, re.DOTALL)
