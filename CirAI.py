@@ -299,7 +299,57 @@ with col_out:
     else:
         st.info("Upload image or netlist to start")
 
+# --- Analog/RF Expert Chatbot (Sidebar) ---
 
+# 1. אתחול היסטוריית השיחה בזיכרון
+if 'chat_history' not in st.session_state:
+    st.session_state['chat_history'] = []
+
+with st.sidebar:
+    st.header("Analog/RF Expert Copilot")
+    st.markdown("Ask me anything about the current circuit, layout considerations, or RF matching.")
+    st.divider()
+    for message in st.session_state['chat_history']:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+    if prompt := st.chat_input("Ask a question (e.g., 'How to improve the phase margin?')..."):
+        with st.chat_message("user"):
+            st.markdown(prompt)
+        current_context = ""
+        if st.session_state.get('res'):
+            res = st.session_state['res']
+            current_context = f"""
+            Current Circuit Context:
+            - Topology: {res.get('topology', 'Unknown')}
+            - Derived Equation: {res.get('H_latex_formula', 'Unknown')}
+            """
+        sys_prompt = f"""
+        You are a Senior Analog and RF IC Design Engineer.
+        Your job is to assist the user with circuit design, small-signal analysis, noise, power optimization, and RF matching.
+        Keep your answers professional, highly technical, and concise. Use standard VLSI terminology.
+        {current_context}
+        """
+        chat_model = genai.GenerativeModel(
+            'gemini-2.5-pro',
+            system_instruction=sys_prompt
+        )
+        gemini_history = [
+            {"role": "user" if msg["role"] == "user" else "model", "parts": [msg["content"]]} 
+            for msg in st.session_state['chat_history']
+        ]
+        chat = chat_model.start_chat(history=gemini_history)
+        with st.chat_message("assistant"):
+            with st.spinner("Thinking..."):
+                try:
+                    if 'img' in st.session_state and st.session_state['img'] is not None and len(st.session_state['chat_history']) == 0:
+                         response = chat.send_message([prompt, st.session_state['img']])
+                    else:
+                         response = chat.send_message(prompt)
+                    st.markdown(response.text)
+                    st.session_state['chat_history'].append({"role": "user", "content": prompt})
+                    st.session_state['chat_history'].append({"role": "assistant", "content": response.text})
+                except Exception as e:
+                    st.error(f"Chat error: {e}")
 
 
 
