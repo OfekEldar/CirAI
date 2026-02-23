@@ -185,8 +185,7 @@ class DesmosCalculatorManager {
             this.calculator.setExpression(expr);
         });
     }
-/*    addUnitDefinitions() {
-        this.calculator.setExpression({id: 'units',type: 'folder',title: 'Units'}); 
+    addUnitDefinitions() {
         UNIT_DEFINITIONS.forEach((unit, index) => {
             try {
                 this.calculator.setExpression(unit);
@@ -199,26 +198,8 @@ class DesmosCalculatorManager {
         state.expressions.list = state.expressions.list.concat(UNIT_DEFINITIONS);
         calculator.setState(state);
     }
-*/
-addUnitDefinitions() {
-    try {
-        // 1. קריאת המצב הנוכחי תוך שימוש ב-this
-        let state = this.calculator.getState();
-        
-        // 2. שרשור המערך כולו (הכולל גם את התיקייה וגם את המשתנים)
-        state.expressions.list = state.expressions.list.concat(UNIT_DEFINITIONS);
-        
-        // 3. החזרת המצב המעודכן למחשבון
-        this.calculator.setState(state);
-        
-        console.log("Units added successfully to the folder.");
-    } catch (e) {
-        console.error("Failed to add units state:", e);
-    }
-}
-    /**
-     * Get calculator status
-     */
+
+
     getStatus() {
         return {
             isReady: this.isReady,
