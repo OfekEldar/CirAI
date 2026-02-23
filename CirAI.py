@@ -261,7 +261,8 @@ with col_out:
         # Generate calculator HTML using template
         calculator_html = generate_calculator_html(z_latex)
         st.components.v1.html(calculator_html, height=600)
-        circuit_uses = st.text_area("Describe the use cases of the circuit (for example: low noise amplifier for 1GHz, power amplifier for 100MHz etc.):", height=150)
+        st.markdown("---")
+        circuit_uses = st.text_area("Describe the use cases of the circuit (for example: low noise amplifier for 1GHz, power amplifier for 100MHz etc.):", height=500)
         if st.button("AI Circuit Advisor"):
             if not img:
                 st.error("please upload something")
