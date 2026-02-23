@@ -29,6 +29,10 @@ def encode_css_base64(css_content):
     """Encode CSS content as base64 for inline embedding"""
     return base64.b64encode(css_content.encode('utf-8')).decode('utf-8')
 
+def load_video_guide():
+    video_html = load_static_file('video.html')
+    return video_html
+
 def generate_calculator_html(z_latex):
     """Generate the calculator HTML using templates"""
     # Load static files
@@ -208,7 +212,8 @@ with col_in:
         else:
             with st.spinner("Analyze..."):
                 st.session_state['res'] = analyze_circuit(img, netlist_content, analysis_request, derivation_steps_flag)
-
+    with st.expander("Quick Guide: How to use the calculator", expanded=False):
+        st.components.html(load_video_guide(), height=400)
 with col_out:
     st.header("2. Circuit Analysis")
     st.info("**Quick Guide:**\n\n"
@@ -258,7 +263,6 @@ with col_out:
                 file_name="circuit_derivation.md",
                 mime="text/markdown"
             )
-        # Generate calculator HTML using template
         calculator_html = generate_calculator_html(z_latex)
         st.components.v1.html(calculator_html, height=600)
         st.markdown("---")
