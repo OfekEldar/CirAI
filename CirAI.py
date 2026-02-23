@@ -209,9 +209,7 @@ with col_in:
         else:
             with st.spinner("Analyze..."):
                 st.session_state['res'] = analyze_circuit(img, netlist_content, analysis_request, derivation_steps_flag)
-    with st.expander("Quick Guide: How to use the calculator", expanded=False):
-        st.write("Watch the video guide for a comprehensive walkthrough of using the calculator, including uploading circuit data, configuring analysis parameters, and interpreting results.")
-        show_guidde_video()
+    show_guidde_video()
 with col_out:
     st.header("2. Circuit Analysis")
     st.info("**Quick Guide:**\n\n"
