@@ -64,7 +64,7 @@ def electrical_advisor(image, topology, analysis_request, circuit_uses):
         "power_advice": "Detailed advice on reducing power consumption",
         "noise_advice": "Detailed advice on minimizing noise",
         "component_advice": "Specific recommendations for component selection and values",
-        "Recommended_articles_links": "Article 1, Article 2, Article 3, ... based on IEEE, JSSC and other reputable sources" 
+        "Recommended_articles_links": "Recommendation for articles related to the circuit, similar circuits, similar architectures, etc. give a links to the articles in this format: "Article 1, Article 2, Article 3, ... " 
     }
     """
     content_inputs = [prompt]
