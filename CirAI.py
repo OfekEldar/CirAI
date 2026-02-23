@@ -50,7 +50,7 @@ def generate_calculator_html(z_latex):
 def electrical_advisor(image, topology, analysis_request, circuit_uses):
     electrical_advisor_flag = 1
     model = genai.GenerativeModel('gemini-2.5-pro')
-    prompt = f"""
+    prompt = """
     You are an expert Analog IC Design Engineer.
     Input provided:
         {"- An image of the schematic" if image else ""}
