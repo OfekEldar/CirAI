@@ -11,6 +11,7 @@ GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
 electrical_advisor_flag = 0
 derivation_steps_flag = 0
+img, topology, analysis_request, circuit_uses = None, None, None, None
 
 def load_static_file(filename):
     """Load content from static file"""
@@ -263,14 +264,16 @@ with col_out:
                 st.error("please upload something")
             else:
                 with st.spinner("Analyze..."):
-
-                    st.session_state['res'] = electrical_advisor(img, topology=topology, analysis_request=analysis_request, circuit_uses=circuit_uses)
+                    st.session_state['res'] = electrical_advisor(img, topology, analysis_request, circuit_uses)
         if electrical_advisor_flag == 1:
+            performance_advice = res.get('performance_advice', "Not found")
+            power_advice = res.get('power_advice', "Not found")
+            noise_advice = res.get('noise_advice', "Not found")
             with st.expander("AI Electrical Advisor - Detailed Recommendations and Derivation"):
                 st.write("Analysis process:")
-                st.markdown(res.get('performance_advice', "Not found"))
-                st.markdown(res.get('power_advice', "Not found"))
-                st.markdown(res.get('noise_advice', "Not found"))
+                st.markdown(performance_advice)
+                st.markdown(power_advice)
+                st.markdown(noise_advice)
                 st.link(res.get('Recommended_articles_links', "#"), "Recommended Articles")
     else:
         st.info("Upload image or netlist to start")
