@@ -109,7 +109,7 @@ def analyze_circuit(image, netlist_text, analysis_request, derivation_steps_flag
     }
     """
     if derivation_steps_flag == 1:
-        prompt += " Also, provide a detailed step-by-step derivation process in markdown format, explaining how you arrived at the final formula. Include intermediate steps, assumptions made, and any simplifications applied during the analysis."
+        prompt += """derivation_steps": "In addition to the above, provide a detailed step-by-step derivation of how you arrived at the final formula. Include all intermediate steps, assumptions, and simplifications made during the analysis. Format the derivation in markdown format with clear explanations for each step."""
     content_inputs = [prompt]
     if image:
         content_inputs.append(image)
@@ -202,8 +202,6 @@ with col_in:
     derivation_steps = st.radio("Derivation Steps:", ["None", "Show derivation steps in markdown format"])
     if derivation_steps == "Show derivation steps in markdown format":
         derivation_steps_flag = 1
-    else:
-        derivation_steps_flag = 0
     if st.button("GO"):
         if not img and not netlist_content:
             st.error("please upload something")
