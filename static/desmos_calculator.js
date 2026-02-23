@@ -50,58 +50,37 @@ class DesmosCalculatorManager {
         this.isFullyReady = false;
     }
 
-    /**
-     * Initialize the calculator
-     */
     init() {
         console.log('Initializing Desmos Calculator...');
-        
         const element = document.getElementById(this.elementId);
         if (!element) {
             console.error(`Element with ID '${this.elementId}' not found`);
             return;
         }
-
         this.calculator = Desmos.GraphingCalculator(element, CALCULATOR_CONFIG);
         let state = this.calculator.getState();
         if (!state.graph) state.graph = {};
         state.graph.complexMode = true;
         this.calculator.setState(state);
-        // Make calculator available globally for debugging
         window.desmosCalc = this.calculator;
         console.log('Calculator object available as window.desmosCalc for debugging');
-
-        // Apply settings after initialization
         this.applySettings();
     }
-
-    /**
-     * Apply calculator settings with error handling
-     */
     applySettings() {
         setTimeout(() => {
-            console.log('Applying calculator settings...');
-            
+            console.log('Applying calculator settings...'); 
             try {
-                // Apply all settings in a single call
                 this.calculator.updateSettings(DEFAULT_SETTINGS);
-                
-                // Set math bounds
                 this.calculator.setMathBounds(DEFAULT_BOUNDS);
                 console.log(`setMathBounds called with bounds: left=${DEFAULT_BOUNDS.left}, right=${DEFAULT_BOUNDS.right}, bottom=${DEFAULT_BOUNDS.bottom}, top=${DEFAULT_BOUNDS.top}`);
-                
                 this.logSettingsStatus();
                 this.isReady = true;
-                window.calculatorReady = true;
-                
+                window.calculatorReady = true;  
             } catch (error) {
                 console.error('Error applying settings:', error);
                 this.applySettingsIndividually();
             }
-            
-            // Add expressions after settings
             this.addExpressions();
-            
         }, 500);
     }
 

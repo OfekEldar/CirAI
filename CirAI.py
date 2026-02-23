@@ -199,6 +199,11 @@ with col_in:
             netlist_content = net_file.read().decode("utf-8")
     elif netlist_method == "Paste text":
         netlist_content = st.text_area("Paste here(SPICE format):", height=150)
+    derivation_steps = st.radio("Derivation Steps:", ["None", "Show derivation steps in markdown format"])
+    if derivation_steps == "Show derivation steps in markdown format":
+        derivation_steps_flag = 1
+    else:
+        derivation_steps_flag = 0
     if st.button("GO"):
         if not img and not netlist_content:
             st.error("please upload something")
