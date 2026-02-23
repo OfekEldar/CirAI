@@ -320,6 +320,8 @@ with st.sidebar:
             Current Circuit Context:
             - Topology: {res.get('topology', 'Unknown')}
             - Derived Equation: {res.get('H_latex_formula', 'Unknown')}
+            - Analysis Request: {analysis_request}
+            - Use Cases: {circuit_uses if circuit_uses else 'Not specified'}
             """
         sys_prompt = f"""
         You are a Senior Analog and RF IC Design Engineer.
@@ -327,10 +329,7 @@ with st.sidebar:
         Keep your answers professional, highly technical, and concise. Use standard VLSI terminology.
         {current_context}
         """
-        chat_model = genai.GenerativeModel(
-            'gemini-2.5-pro',
-            system_instruction=sys_prompt
-        )
+        chat_model = genai.GenerativeModel('gemini-2.5-pro',system_instruction=sys_prompt)
         gemini_history = [
             {"role": "user" if msg["role"] == "user" else "model", "parts": [msg["content"]]} 
             for msg in st.session_state['chat_history']
