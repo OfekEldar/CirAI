@@ -10,6 +10,7 @@ import os
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
 electrical_advisor_flag = 0
+derivation_steps_flag = 0
 
 def load_static_file(filename):
     """Load content from static file"""
@@ -88,7 +89,7 @@ def electrical_advisor(image, topology, analysis_request, circuit_uses):
             return None
     return None 
 
-def analyze_circuit(image, netlist_text, analysis_request):
+def analyze_circuit(image, netlist_text, analysis_request, derivation_steps_flag):
     model = genai.GenerativeModel('gemini-2.5-pro')
     prompt = """
     You are an expert Analog IC Design Engineer.
@@ -104,9 +105,10 @@ def analyze_circuit(image, netlist_text, analysis_request):
       "topology": "Topology Name",
       "H_latex_formula": "formula using s, R, C, L, g_m, r_o in regular LaTex format, The expression should be as simplified as possible. Do not use the || (parallel) symbol, but simplify the equation as much as possible. do not neglect any parameter. do not use in prohibited LaTex letters like: ',', ';' etc.",
       "H_latex": "formula using s, R, C, L, g_m, r_o. use the Desmos calculator LaTex format only. for example: {5+a_{2}}/{s^{2}+\\\\pi*s-{1}/{5*s}}. use * for multiply, / for divition. any nominator or denominator, put in parentheses: '()'. the function name will be: Z(s) if it is impedance, H(s) if it is a transfer function."
-      "derivation_steps": "Detailed step-by-step derivation in Markdown/LaTeX. Include: 1. Small signal model used. 2. KCL/KVL equations. 3. Simplification steps."
     }
     """
+    if derivation_steps_flag == 1:
+        prompt += " Also, provide a detailed step-by-step derivation process in markdown format, explaining how you arrived at the final formula. Include intermediate steps, assumptions made, and any simplifications applied during the analysis."
     content_inputs = [prompt]
     if image:
         content_inputs.append(image)
@@ -201,14 +203,6 @@ with col_in:
         else:
             with st.spinner("Analyze..."):
                 st.session_state['res'] = analyze_circuit(img, netlist_content, analysis_request)
-    if st.session_state['res'] != None:
-        if st.button("AI Circuit Advisor"):
-            circuit_uses = st.text_area("Describe the use cases of the circuit (for example: low noise amplifier for 1GHz, power amplifier for 100MHz etc.):", height=150)
-            if not img:
-                st.error("please upload something")
-            else:
-                with st.spinner("Analyze..."):
-                    st.session_state['res'] = electrical_advisor(img, st.session_state['res'].get('topology', 'Unknown'), analysis_request, circuit_uses)
 
 with col_out:
     st.header("2. Circuit Analysis")
@@ -230,6 +224,7 @@ with col_out:
         res = st.session_state['res']
         z_latex = res.get('H_latex', '0')
         H_latex_formula = res.get('H_latex_formula', '0')
+        topology = res.get('topology', 'Unknown')
         print(z_latex)
         st.success(f"**Topology:** {res.get('topology')}")
         st.latex(rf"\large {H_latex_formula}")
@@ -261,6 +256,14 @@ with col_out:
         # Generate calculator HTML using template
         calculator_html = generate_calculator_html(z_latex)
         st.components.v1.html(calculator_html, height=600)
+    if st.session_state['res'] != None:
+        if st.button("AI Circuit Advisor"):
+            circuit_uses = st.text_area("Describe the use cases of the circuit (for example: low noise amplifier for 1GHz, power amplifier for 100MHz etc.):", height=150)
+            if not img:
+                st.error("please upload something")
+            else:
+                with st.spinner("Analyze..."):
+                    st.session_state['res'] = electrical_advisor(img, topology=topology, analysis_request=analysis_request, circuit_uses=circuit_uses)
         if electrical_advisor_flag == 1:
             with st.expander("AI Electrical Advisor - Detailed Recommendations and Derivation"):
                 st.write("Analysis process:")
