@@ -27,14 +27,15 @@ const DEFAULT_BOUNDS = {
 
 // Unit definitions for engineering notation
 const UNIT_DEFINITIONS = [
-    {id: 'f_unit', latex: 'f = 10^{-15}'},
-    {id: 'p_unit', latex: 'p = 10^{-12}'},
-    {id: 'n_unit', latex: 'n = 10^{-9}'},
-    {id: 'u_unit', latex: 'u = 10^{-6}'},
-    {id: 'm_unit', latex: 'm = 10^{-3}'},
-    {id: 'k_unit', latex: 'k = 10^{3}'},
-    {id: 'M_unit', latex: 'M = 10^{6}'},
-    {id: 'G_unit', latex: 'G = 10^{9}'}
+    {id: 'units', type: 'folder', title: 'Units'},
+    {id: 'f_unit', latex: 'f = 10^{-15}',folderId: 'units'},
+    {id: 'p_unit', latex: 'p = 10^{-12}', folderId: 'units'},
+    {id: 'n_unit', latex: 'n = 10^{-9}', folderId: 'units'},
+    {id: 'u_unit', latex: 'u = 10^{-6}', folderId: 'units'},
+    {id: 'm_unit', latex: 'm = 10^{-3}', folderId: 'units'},
+    {id: 'k_unit', latex: 'k = 10^{3}', folderId: 'units'},
+    {id: 'M_unit', latex: 'M = 10^{6}', folderId: 'units'},
+    {id: 'G_unit', latex: 'G = 10^{9}', folderId: 'units'}
 ];
 
 /**
@@ -168,9 +169,8 @@ class DesmosCalculatorManager {
      */
     addCoreExpressions() {
         const coreExpressions = [
-            {id: 'expressions', type: 'folder', title: 'expressions'},
+            {id: 'expressions', type: 'folder', title: 'Expressions'},
             {id: 'params', type: 'folder', title: 'Params'},
-            {id: 'units', type: 'folder', title: 'Units'},
             {id: 'Z', latex: '{z_latex}', folderId: 'expressions'},
             {id: 'f', latex: 'f_{z} = \\frac{1}{1+sR_{e}C_{e}}'},
             {id: 'slider1', latex: 'R_{e}=100', sliderBounds: {min: 100000,max: 1000000,step: 1}, folderId: 'params'},
