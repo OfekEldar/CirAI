@@ -109,7 +109,7 @@ def analyze_circuit(image, netlist_text, analysis_request, derivation_steps_flag
     }
     """
     if derivation_steps_flag == 1:
-        prompt += """derivation_steps": "In addition to the above, provide a detailed step-by-step derivation of how you arrived at the final formula. Include all intermediate steps, assumptions, and simplifications made during the analysis. Format the derivation in markdown format with clear explanations for each step."""
+        prompt += """derivation_steps": "In addition to the above, provide a detailed step-by-step derivation of how you arrived at the final formula. Include all intermediate steps, assumptions, and simplifications made during the analysis. write it in LaTex format only."""
     content_inputs = [prompt]
     if image:
         content_inputs.append(image)
