@@ -27,8 +27,8 @@ const DEFAULT_BOUNDS = {
 
 // Unit definitions for engineering notation
 const UNIT_DEFINITIONS = [
-    {id: 'units', type: 'folder', title: 'Units'},
-    {id: 'f_unit', latex: 'f = 10^{-15}',folderId: 'units'},
+    {id: 'units',type: 'folder',title: 'Units'},
+    {id: 'f_unit', latex: 'f = 10^{-15}', folderId: 'units'},
     {id: 'p_unit', latex: 'p = 10^{-12}', folderId: 'units'},
     {id: 'n_unit', latex: 'n = 10^{-9}', folderId: 'units'},
     {id: 'u_unit', latex: 'u = 10^{-6}', folderId: 'units'},
@@ -185,11 +185,8 @@ class DesmosCalculatorManager {
             this.calculator.setExpression(expr);
         });
     }
-
-    /**
-     * Add engineering unit definitions
-     */
-    addUnitDefinitions() {
+/*    addUnitDefinitions() {
+        this.calculator.setExpression({id: 'units',type: 'folder',title: 'Units'}); 
         UNIT_DEFINITIONS.forEach((unit, index) => {
             try {
                 this.calculator.setExpression(unit);
@@ -202,7 +199,23 @@ class DesmosCalculatorManager {
         state.expressions.list = state.expressions.list.concat(UNIT_DEFINITIONS);
         calculator.setState(state);
     }
-
+*/
+addUnitDefinitions() {
+    try {
+        // 1. קריאת המצב הנוכחי תוך שימוש ב-this
+        let state = this.calculator.getState();
+        
+        // 2. שרשור המערך כולו (הכולל גם את התיקייה וגם את המשתנים)
+        state.expressions.list = state.expressions.list.concat(UNIT_DEFINITIONS);
+        
+        // 3. החזרת המצב המעודכן למחשבון
+        this.calculator.setState(state);
+        
+        console.log("Units added successfully to the folder.");
+    } catch (e) {
+        console.error("Failed to add units state:", e);
+    }
+}
     /**
      * Get calculator status
      */
