@@ -274,7 +274,8 @@ with col_out:
                 st.markdown(performance_advice)
                 st.markdown(power_advice)
                 st.markdown(noise_advice)
-                st.link(res.get('Recommended_articles_links', "#"), "Recommended Articles")
+                st.markdown(res.get('component_advice', "Not found"))
+                st.markdown(res.get('Recommended_articles_links', "Not found"))
     else:
         st.info("Upload image or netlist to start")
 
