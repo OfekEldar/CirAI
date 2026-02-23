@@ -268,7 +268,9 @@ with col_out:
         if electrical_advisor_flag == 1:
             with st.expander("AI Electrical Advisor - Detailed Recommendations and Derivation"):
                 st.write("Analysis process:")
-                st.markdown(res.get('advisor_output', "Not found"))
+                st.markdown(res.get('performance_advice', "Not found"))
+                st.markdown(res.get('power_advice', "Not found"))
+                st.markdown(res.get('noise_advice', "Not found"))
                 st.link(res.get('Recommended_articles_links', "#"), "Recommended Articles")
     else:
         st.info("Upload image or netlist to start")
