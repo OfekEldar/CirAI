@@ -180,9 +180,9 @@ col_in, col_out = st.columns([1, 2])
 
 with col_in:
     st.header("1. Input (Image or Netlist)")
-    uploaded_file = st.file_uploader("Upload circuit image", type=["png", "jpg", "jpeg"])
-    paste_result = paste_image_button(label="Paste here", errors="ignore")
-    netlist_file = st.file_uploader("Upload circuit Netlist", type=["txt"])
+    #uploaded_file = st.file_uploader("Upload circuit image", type=["png", "jpg", "jpeg"])
+    #paste_result = paste_image_button(label="Paste here", errors="ignore")
+    #netlist_file = st.file_uploader("Upload circuit Netlist", type=["txt"])
     analysis_request = st.text_input("Function to analyze (for example: Vout/Vin, Z(Vout) etc.):", value="Vout")
     tab1, tab2, tab3 = st.tabs(["🖼️ Upload / Paste", "✏️ Draw Circuit", "📝 Netlist"])
     with tab1:
