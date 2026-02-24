@@ -219,7 +219,9 @@ with col_out:
             "4. **Bode Plots:** In Settings -> More Options, switch axes to 'Logarithmic'.\n"
             "5. **Analysis Commands:** Use `|Z|` (Mag), `angle(Z)` (Phase), `real(Z)` (R), and `imag(Z)` (X).\n"
             "6. **Tuning:** Enter values for $g_m, r_o, C$. Delete a parameter's definition to auto-generate a Slider.\n"
-            "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \\pi x$.")
+            "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \\pi x$.\n"
+            "8. **Axis scaling:** To change the scale of the axes, press shift and point to a specific axis, X-axis or Y-axis. Then change the size using the mouse wheel."
+            )
     if st.session_state['res'] == None:
         z_init = 'Z(s) = 0'  # Default initial expression
         example_img = "LPF.jpg"
