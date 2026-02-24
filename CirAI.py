@@ -205,29 +205,58 @@ with col_in:
             img = paste_result.image_data
             
     elif input_method == "✏️ Draw Circuit":
-        st.write("Draw your schematic directly (use standard symbols):")
-        canvas_result = st_canvas(
-            fill_color="rgba(255, 165, 0, 0.3)",
-            stroke_width=2,
-            stroke_color="#000000", 
-            background_color="#ffffff", 
-            height=400,
-            width=400,
-            drawing_mode="freedraw",
-            key="circuit_canvas",
-        )
-        
-        if canvas_result.image_data is not None:
-            # תיקון לוגיקה: בודק אם יש פיקסלים שאינם לבנים (255,255,255)
-            # חותכים את המערך ל-3 הערוצים הראשונים (RGB) ומתעלמים מהאלפא
-            is_drawn = np.any(canvas_result.image_data[:, :, :3] != 255)
+            st.write("Draw your schematic directly (use standard symbols):")
             
-            if is_drawn:
-                rgba_img = Image.fromarray(canvas_result.image_data.astype('uint8'), 'RGBA')
-                white_bg = Image.new("RGB", rgba_img.size, (255, 255, 255))
-                white_bg.paste(rgba_img, mask=rgba_img.split()[3]) 
-                img = white_bg
-                st.success("Drawing captured!")
+            # --- סרגל כלים מתקדם לציור ---
+            col_tools1, col_tools2 = st.columns([3, 1])
+            with col_tools1:
+                draw_tool = st.radio(
+                    "Choose Tool:", 
+                    ["✏️ Freehand", "📏 Line", "🧽 Eraser", "🖱️ Select/Delete"], 
+                    horizontal=True
+                )
+            with col_tools2:
+                stroke_width = st.slider("Thickness:", 1, 10, 2)
+
+            # --- המרת בחירת המשתמש להגדרות הלוח ---
+            if draw_tool == "✏️ Freehand":
+                mode = "freedraw"
+                color = "#000000"
+            elif draw_tool == "📏 Line":
+                mode = "line"
+                color = "#000000"
+            elif draw_tool == "🧽 Eraser":
+                mode = "freedraw"
+                color = "#ffffff"  # עט לבן ש"מוחק" את השחור
+                stroke_width = stroke_width * 4  # עושים את המחק עבה יותר שיהיה נוח
+            else: # 🖱️ Select/Delete
+                mode = "transform"
+                color = "#000000"
+                st.info("💡 Click on any line or shape you drew and press 'Delete' on your keyboard to remove it.")
+
+            # --- יצירת הלוח ---
+            canvas_result = st_canvas(
+                fill_color="rgba(255, 165, 0, 0.3)",
+                stroke_width=stroke_width,
+                stroke_color=color, 
+                background_color="#ffffff", 
+                height=400,
+                width=400,
+                drawing_mode=mode,
+                key="circuit_canvas",
+            )
+            
+            # --- עיבוד התמונה ---
+            if canvas_result.image_data is not None:
+                # האלגוריתם הזה עובד מושלם עם המחק! הוא מחפש רק פיקסלים שאינם לבנים
+                is_drawn = np.any(canvas_result.image_data[:, :, :3] != 255)
+                
+                if is_drawn:
+                    rgba_img = Image.fromarray(canvas_result.image_data.astype('uint8'), 'RGBA')
+                    white_bg = Image.new("RGB", rgba_img.size, (255, 255, 255))
+                    white_bg.paste(rgba_img, mask=rgba_img.split()[3]) 
+                    img = white_bg
+                    st.success("Drawing captured!")
                 
     elif input_method == "📝 Netlist":
         st.write("Upload or paste SPICE Netlist:")
