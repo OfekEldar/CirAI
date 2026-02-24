@@ -109,6 +109,7 @@ def analyze_circuit(image, netlist_text, analysis_request, derivation_steps_flag
       "topology": "Topology Name",
       "H_latex_formula": "formula using s, R, C, L, g_m, r_o in regular LaTex format, The expression should be as simplified as possible. Do not use the || (parallel) symbol, but simplify the equation as much as possible. do not neglect any parameter. do not use in prohibited LaTex letters like: ',', ';' etc.",
       "H_latex": "formula using s, R, C, L, g_m, r_o. use the Desmos calculator LaTex format only. for example: {5+a_{2}}/{s^{2}+\\\\pi*s-{1}/{5*s}}. use * for multiply, / for divition. any nominator or denominator, put in parentheses: '()'. the function name will be: Z(s) if it is impedance, H(s) if it is a transfer function."
+      "params": ["list of all the parameters that appear in the formula, for example: ['R1', 'C2', 'gm3', 'ro4']"]
     }
     """
     if derivation_steps_flag == 1:
@@ -334,6 +335,33 @@ with col_out:
                 file_name="circuit_derivation.md",
                 mime="text/markdown"
             )
+        with st.expander("📚 Reference Formulas (Auto-Detected)"):
+            st.markdown("נוסחאות שימושיות עבור הרכיבים שזוהו במעגל שלך:")
+            detected_params = " ".join(res.get('params', [])) + res.get('H_latex_formula', '') + res.get('H_latex', '')
+            if 'gm' in detected_params or 'ro' in detected_params or 'M' in detected_params:
+                st.markdown("**MOSFET (Saturation Region):**")
+                st.latex(r"I_D = \frac{1}{2} \mu C_{ox} \frac{W}{L} (V_{GS} - V_{TH})^2")
+                st.latex(r"g_m = \frac{2I_D}{V_{OV}} = \sqrt{2 \mu C_{ox} \frac{W}{L} I_D}")
+                st.latex(r"r_o = \frac{1}{\lambda I_D} \approx \frac{V_E L}{I_D}")
+                st.divider()
+            if 'C' in detected_params:
+                st.markdown("**Capacitor:**")
+                st.latex(r"Z_C = \frac{1}{sC}")
+                st.latex(r"I_C = C \frac{dV_C}{dt}")
+                st.divider()
+            if 'L' in detected_params:
+                st.markdown("**Inductor & LC Tank:**")
+                st.latex(r"Z_L = sL")
+                st.latex(r"V_L = L \frac{dI_L}{dt}")
+                # הוספת תדר תהודה במידה ויש גם קבל וגם סליל
+                if 'C' in detected_params:
+                    st.latex(r"\omega_0 = \frac{1}{\sqrt{LC}} \quad \text{(Resonance Frequency)}")
+                st.divider()
+                
+            # בדיקה האם יש נגדים (R)
+            if 'R' in detected_params:
+                st.markdown("**Resistor (Thermal Noise):**")
+                st.latex(r"\overline{V_n^2} = 4k_B T R \cdot \Delta f")
         calculator_html = generate_calculator_html(z_latex)
         st.components.v1.html(calculator_html, height=600)
         st.markdown("---")
