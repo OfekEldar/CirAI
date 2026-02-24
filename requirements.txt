@@ -1,4 +1,5 @@
 streamlit
 streamlit_paste_button
+streamlit_drawable_canvas
 google-generativeai
 Pillow

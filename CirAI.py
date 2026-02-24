@@ -2,10 +2,12 @@ import streamlit as st
 import google.generativeai as genai
 from PIL import Image
 from streamlit_paste_button import paste_image_button
+from streamlit_drawable_canvas import st_canvas
 import json
 import re
 import base64
 import os
+import numpy as np
 from video import show_guidde_video
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
@@ -182,34 +184,58 @@ with col_in:
     paste_result = paste_image_button(label="Paste here", errors="ignore")
     netlist_file = st.file_uploader("Upload circuit Netlist", type=["txt"])
     analysis_request = st.text_input("Function to analyze (for example: Vout/Vin, Z(Vout) etc.):", value="Vout")
-    if uploaded_file:
-        img = Image.open(uploaded_file)
-        st.image(img, caption="The analyzed circuit", width=350)
-    else:
-        img = None
-    if paste_result.image_data is not None:
-        st.write("Image pasted")
-        st.image(paste_result.image_data)
-        img = paste_result.image_data
-    st.markdown("---")
-    netlist_method = st.radio("Netlist:", ["None", "Upload Netlist file", "Paste text"])
-    netlist_content = None
-    if netlist_method == "Upload Netlist file":
-        net_file = st.file_uploader("upload file .net or .sp or .txt", type=["net", "sp", "txt"])
-        if net_file:
-            netlist_content = net_file.read().decode("utf-8")
-    elif netlist_method == "Paste text":
-        netlist_content = st.text_area("Paste here(SPICE format):", height=150)
+    tab1, tab2, tab3 = st.tabs(["🖼️ Upload / Paste", "✏️ Draw Circuit", "📝 Netlist"])
+    with tab1:
+            st.write("Upload or paste a circuit image:")
+            uploaded_file = st.file_uploader("Upload circuit image", type=["png", "jpg", "jpeg"])
+            paste_result = paste_image_button(label="📋 Paste here", errors="ignore")
+            if uploaded_file:
+                img = Image.open(uploaded_file)
+                st.image(img, caption="Uploaded circuit", width=350)
+            elif paste_result.image_data is not None:
+                st.image(paste_result.image_data, caption="Pasted circuit", width=350)
+                img = paste_result.image_data
+    with tab2:
+            st.write("Draw your schematic directly (use standard symbols):")
+            canvas_result = st_canvas(
+                fill_color="rgba(255, 165, 0, 0.3)",
+                stroke_width=2,
+                stroke_color="#000000", 
+                background_color="#ffffff", 
+                height=400,
+                width=400,
+                drawing_mode="freedraw",
+                key="circuit_canvas",
+            )
+            if canvas_result.image_data is not None:
+                rgba_img = Image.fromarray(canvas_result.image_data.astype('uint8'), 'RGBA')
+                white_bg = Image.new("RGB", rgba_img.size, (255, 255, 255))
+                white_bg.paste(rgba_img, mask=rgba_img.split()[3]) 
+                if np.any(canvas_result.image_data[:, :, 3] > 0): 
+                    img = white_bg
+                    st.success("Drawing captured!")
+    with tab3:
+            st.write("Upload or paste SPICE Netlist:")
+            netlist_method = st.radio("Method:", ["Upload Netlist file", "Paste text"], horizontal=True)
+            if netlist_method == "Upload Netlist file":
+                net_file = st.file_uploader("upload file .net or .sp or .txt", type=["net", "sp", "txt"])
+                if net_file:
+                    netlist_content = net_file.read().decode("utf-8")
+            elif netlist_method == "Paste text":
+                netlist_content = st.text_area("Paste here (SPICE format):", height=200)
     derivation_steps = st.radio("Derivation Steps:", ["None", "Show derivation steps in markdown format"])
+    st.markdown("---")
     if derivation_steps == "Show derivation steps in markdown format":
         derivation_steps_flag = 1
-    if st.button("GO"):
-        if not img and not netlist_content:
-            st.error("please upload something")
-        else:
-            with st.spinner("Analyze..."):
-                st.session_state['res'] = analyze_circuit(img, netlist_content, analysis_request, derivation_steps_flag)
+    if st.button("Analyze Circuit", use_container_width=True):
+            if not img and not netlist_content:
+                st.error("Please provide an image, draw a circuit, or input a netlist first.")
+            else:
+                with st.spinner("Analyzing the circuit..."):
+                    st.session_state['res'] = analyze_circuit(img, netlist_content, analysis_request, derivation_steps_flag)
+                    st.session_state['img'] = img
     show_guidde_video()
+
 with col_out:
     st.header("2. Circuit Analysis")
     st.info("**Quick Guide:**\n\n"
