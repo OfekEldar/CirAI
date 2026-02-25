@@ -21,8 +21,8 @@ const DEFAULT_SETTINGS = {
 const DEFAULT_BOUNDS = {
     left: 10000,
     right: 10000000000,
-    bottom: -2,
-    top: 2
+    bottom: -200,
+    top: 1000
 };
 
 // Unit definitions for engineering notation
