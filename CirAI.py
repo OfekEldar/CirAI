@@ -169,7 +169,7 @@ def assign_param_bounds(param_list):
         result.append([name, min_val, max_val])
     return result
 
-# --- GUI ---
+# --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
 st.title("CirAI:Electrical circuit Image or netlist to Interactive Math")
 
@@ -276,7 +276,7 @@ with col_out:
             "8. **Axis scaling:** To change the scale of the axes, press shift and point to a specific axis, X-axis or Y-axis. Then change the size using the mouse wheel."
             )
     if st.session_state['res'] == None:
-        z_init = 'Z(s) = 0'  # Default initial expression
+        z_init = 'Z(s) = 0' 
         example_img = "LPF.jpg"
         st.image(example_img, caption="Example circuit analysis", width=350)
         calculator_html = generate_calculator_html(z_init)
@@ -377,10 +377,8 @@ with col_out:
                 st.markdown(adv.get('Recommended_articles_links', "Not found"))
     else:
         st.info("Upload image or netlist to start")
-
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
-
 with st.sidebar:
     st.header("Analog/RF Expert Copilot")
     st.markdown("Ask me anything about the current circuit, layout considerations, or RF matching.")

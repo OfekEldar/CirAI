@@ -158,6 +158,8 @@ class DesmosCalculatorManager {
             {id: 'slider1', latex: 'R_{e}=100', sliderBounds: {min: 100000,max: 1000000,step: 1}, folderId: 'params'},
             {id: 'slider2', latex: 'C_{e} = 1p', folderId: 'params'},
             /*{id: 'z_val', latex: `Z = ${this.zLatex}`},*/
+            {id: 'H_abs', latex: '\\left|H(s)\\right|', folderId: 'expressions'},
+            {id: 'H_phase', latex: '-90-\\frac{180}{\\pi}\\cdot\\arctan\\left(\\operatorname{real}\\left(H\\left(s\\right)\\right),\\operatorname{imag}\\left(H\\left(s\\right)\\right)\\right)', folderId: 'expressions'},
             {id: 'z_abs', latex: '\\left|f_{z}\\right|', folderId: 'expressions'},
             {id: 'z_phase', latex: '\\arctan\\left(\\frac{\\operatorname{imag}\\left(f_{z}\\right)}{\\operatorname{real}\\left(f_{z}\\right)}\\right)', folderId: 'expressions'},
             {id: 's_def', latex: 's = i * 2 * \\pi * x', folderId: 'expressions'}
