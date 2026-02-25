@@ -9,7 +9,7 @@ import base64
 import os
 import numpy as np
 from video import show_guidde_video
-import GUI
+from GUI import col_in, col_out, set_page_config
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
@@ -175,4 +175,3 @@ col_in, col_out = st.columns([1, 2])
 GUI.set_page_config()
 GUI.col_in()
 GUI.col_out()
-    
