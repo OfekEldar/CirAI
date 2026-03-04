@@ -32,7 +32,7 @@ def encode_css_base64(css_content):
     """Encode CSS content as base64 for inline embedding"""
     return base64.b64encode(css_content.encode('utf-8')).decode('utf-8')
 
-def generate_calculator_html(z_latex):
+def generate_calculator_html(z_latex, params=[]):
     """Generate the calculator HTML using templates"""
     # Load static files
     html_template = load_static_file('desmos_calculator.html')
@@ -49,6 +49,7 @@ def generate_calculator_html(z_latex):
     html_content = html_template.replace('{css_base64}', css_base64)
     html_content = html_content.replace('{calculator_js}', js_content)
     html_content = html_content.replace('{z_latex}', z_latex)
+    html_content = html_content.replace('{params}', json.dumps(params))
     
     return html_content
 
@@ -138,6 +139,27 @@ def analyze_circuit(image, netlist_text, analysis_request, derivation_steps_flag
             return None
     return None
 
+def optimize_circuit(bounded_param_list, image, formula, analysis_request, circuit_uses):
+    prompt = """
+    You are an expert Analog IC Design Engineer.
+    Input provided:
+        {"- An image of the schematic" if image else ""}
+        {"- A symbolic formula for the circuit behavior: " + formula if formula else ""}
+        {"- Analysis request: " + analysis_request if analysis_request else ""}
+        {"- Circuit use cases: " + circuit_uses if circuit_uses else ""}
+    Based on the provided circuit diagram, symbolic formula, and analysis request, optimize the circuit design by tuning the following parameters within their specified bounds:
+    {bounded_param_list}
+    Provide specific recommendations for how to adjust these parameters to improve the circuit's performance with respect to the analysis request and use cases. Explain the reasoning behind each recommendation.
+    Output ONLY a valid JSON object:
+    {
+        "optimized_parameters": {
+            "param_name": "optimized_value",
+            ...
+        },
+        "optimization_advice": "Detailed advice on how to adjust the parameters and why"
+    }
+    """
+
 def assign_param_bounds(param_list):
     bounds_config = {
         'gm': (1e-3, 500e-3),
@@ -159,14 +181,16 @@ def assign_param_bounds(param_list):
             min_val, max_val = bounds_config['C']
         elif name.startswith('L'):
             min_val, max_val = bounds_config['L']
-        elif name.startswith('ro'):
-            min_val, max_val = bounds_config['ro']
+        elif name.startswith('r'):
+            min_val, max_val = bounds_config['r']
         elif name.startswith('A'):
             min_val, max_val = bounds_config['A']    
         else:
             print(f"Warning: Unknown parameter type for '{name}'")
             continue 
-        result.append([name, min_val, max_val])
+        value = (min_val + max_val) / 2
+        step = (max_val - min_val) / 100
+        result.append([name, value, min_val, max_val, step])
     return result
 
 # --- GUI --- #
@@ -279,13 +303,14 @@ with col_out:
         z_init = 'Z(s) = 0' 
         example_img = "LPF.jpg"
         st.image(example_img, caption="Example circuit analysis", width=350)
-        calculator_html = generate_calculator_html(z_init)
+        calculator_html = generate_calculator_html(z_init, params=[])
         st.components.v1.html(calculator_html, height=600)
     elif st.session_state['res']:
         res = st.session_state['res']
         z_latex = res.get('H_latex', '0')
         H_latex_formula = res.get('H_latex_formula', '0')
         topology = res.get('topology', 'Unknown')
+        params = assign_param_bounds(res.get('params', []))
         print(z_latex)
         st.success(f"**Topology:** {res.get('topology')}")
         st.latex(rf"\large {H_latex_formula}")
@@ -338,7 +363,7 @@ with col_out:
             if 'R' in detected_params:
                 st.markdown("**Resistor (Thermal Noise):**")
                 st.latex(r"\overline{V_n^2} = 4k_B T R \cdot \Delta f")
-        calculator_html = generate_calculator_html(z_latex)
+        calculator_html = generate_calculator_html(z_latex, params)
         st.components.v1.html(calculator_html, height=600)
         st.markdown("---")
         st.markdown(

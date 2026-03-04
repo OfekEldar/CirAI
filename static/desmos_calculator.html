@@ -22,7 +22,8 @@
         // Initialize calculator when DOM is ready
         document.addEventListener('DOMContentLoaded', function() {
             const zLatex = "{z_latex}";
-            const calculatorManager = initializeCalculator(zLatex);
+            const params = {params};
+            const calculatorManager = initializeCalculator(zLatex, params);
             
             // Make manager available globally for debugging
             window.calculatorManager = calculatorManager;
