@@ -252,7 +252,7 @@ def create_project_export(img, netlist_text, analysis_request, res, advisor_res=
 
 def render_save_project_section(img, netlist_content, analysis_request, res, advisor_res):
     """
-    מציגה את ממשק השמירה ושומרת את הפרויקט לתיקייה מקומית 
+    מייצרת כפתור הורדה לשמירת הפרויקט, עם שם קובץ דינמי מבוסס טופולוגיה.
     """
     if not res:
         return 
@@ -260,46 +260,29 @@ def render_save_project_section(img, netlist_content, analysis_request, res, adv
     st.markdown("---")
     st.subheader("💾 Save Project")
     
+    # 1. שליפת שם הטופולוגיה וניקוי תווים בעייתיים
     topology_name = res.get('topology', 'circuit_project')
     safe_filename = re.sub(r'[\\/*?:"<>|]', "", topology_name).replace(" ", "_") + ".json"
     
-    # החלפתי את הלוכסנים ללוכסנים קדמיים - פייתון בווינדוס מסתדר איתם מצוין
-    # וזה מונע בעיות של Escape Characters שקורות עם לוכסן אחורי
-    default_path = "C:/Users/ofekel/Retym, Inc/Retym, Inc. - Documents/Engineering/Analog/Tools/AI tools/Projects"
-    save_directory = st.text_input("Save directory:", value=default_path)
+    # 2. יצירת תוכן ה-JSON מראש
+    json_export = create_project_export(
+        img, 
+        netlist_content, 
+        analysis_request, 
+        res,
+        advisor_res
+    )
     
-    if st.button("Save to Folder", use_container_width=True):
-        try:
-            # המרה לאובייקט נתיב
-            save_dir_path = Path(save_directory)
-            
-            # וידוא שמדובר בנתיב מוחלט ולא יחסי לתיקיית העבודה
-            if not save_dir_path.is_absolute():
-                save_dir_path = save_dir_path.resolve()
-            
-            # הדפסת דיבאג למסך כדי שתראה בדיוק לאן זה הולך
-            st.info(f"🔍 Debug (Absolute Path): {save_dir_path}")
-            
-            # יצירת התיקייה
-            save_dir_path.mkdir(parents=True, exist_ok=True)
-            
-            full_file_path = save_dir_path / safe_filename
-            
-            json_export = create_project_export(
-                img, 
-                netlist_content, 
-                analysis_request, 
-                res,
-                advisor_res
-            )
-            
-            with open(full_file_path, "w", encoding="utf-8") as f:
-                f.write(json_export)
-                
-            st.success(f"Project saved successfully! File: {safe_filename}")
-            
-        except Exception as e:
-            st.error(f"Error saving file: {e}")
+    st.info("💡 Tip: To save directly to your SharePoint folder, ensure your browser is set to 'Ask where to save each file before downloading'.")
+    
+    # 3. יצירת כפתור ההורדה
+    st.download_button(
+        label=f"Download {safe_filename}",
+        data=json_export,
+        file_name=safe_filename,
+        mime="application/json",
+        use_container_width=True
+    )
 
 # --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
