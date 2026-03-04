@@ -257,7 +257,7 @@ def render_save_project_section(img, netlist_content, analysis_request, res, adv
     st.subheader("💾 Save Project")
     topology_name = res.get('topology', 'circuit_project')
     safe_filename = re.sub(r'[\\/*?:"<>|]', "", topology_name).replace(" ", "_") + ".json"
-    save_directory = st.text_input("Save directory:", value="C:\\Users\\ofekel\\Retym, Inc\\Retym, Inc. - Documents\\Engineering\\Analog\\Tools\\AI tools\\Projects")
+    save_directory = st.text_input("Save directory:", value="C:\\Users\\ofekel\\Retym, Inc\\Retym, Inc. - Documents\\Engineering\\Analog\\Tools\\AI tools\\Projects\\")
     if st.button("Save to Folder", use_container_width=True):
             try:
                 save_dir_path = Path(save_directory).resolve()
