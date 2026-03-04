@@ -144,6 +144,8 @@ def analyze_circuit(image, netlist_text, analysis_request, derivation_steps_flag
 
 def optimize_circuit(bounded_param_list, image, formula, analysis_request, circuit_uses):
     model = genai.GenerativeModel('gemini-2.5-pro')
+    
+    # הוספנו f-string, הכפלנו סוגריים מסולסלים ל-JSON, והוספנו חוקים נוקשים לפורמט
     prompt = """
     You are an expert Analog IC Design Engineer.
     Input provided:
@@ -151,17 +153,22 @@ def optimize_circuit(bounded_param_list, image, formula, analysis_request, circu
         {"- A symbolic formula for the circuit behavior: " + formula if formula else ""}
         {"- Analysis request: " + analysis_request if analysis_request else ""}
         {"- Circuit use cases: " + circuit_uses if circuit_uses else ""}
+        
     Based on the provided circuit diagram, symbolic formula, and analysis request, optimize the circuit design by tuning the following parameters within their specified bounds:
     {bounded_param_list}
-    Provide specific recommendations for how to adjust these parameters to improve the circuit's performance with respect to the analysis request and use cases. Explain the reasoning behind each recommendation.
-    Output ONLY a valid JSON object:
-    {
-        "optimized_parameters": {
-            "param_name": "optimized_value",
-            ...
-        },
+    
+    CRITICAL INSTRUCTIONS FOR OUTPUT:
+    1. The "optimized_parameters" values MUST BE EXACT ALPHANUMERIC STRINGS representing the calculated numerical value and its engineering prefix (e.g., "100f", "5p", "10n", "2.5u", "50m", "10", "1k", "10M").
+    2. DO NOT output ANY descriptive text or explanations (like "maximum of range") inside the "optimized_parameters" values. 
+    3. Put all your reasoning, explanations, and descriptions ONLY in the "optimization_advice" string.
+
+    Output ONLY a valid JSON object matching this exact format:
+    {{
+        "optimized_parameters": {{
+            "param_name": "exact_value_with_prefix"
+        }},
         "optimization_advice": "Detailed advice on how to adjust the parameters and why"
-    }
+    }}
     """
     content_inputs = [prompt]
     if image:
@@ -177,9 +184,7 @@ def optimize_circuit(bounded_param_list, image, formula, analysis_request, circu
     match = re.search(r'\{.*\}', response.text, re.DOTALL)
     if match:
         try:
-            # Clean the JSON string to remove control characters
             json_str = match.group()
-            # Remove common problematic control characters
             json_str = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', json_str)
             return json.loads(json_str)
         except json.JSONDecodeError as e:
@@ -199,20 +204,13 @@ def assign_param_bounds(param_list):
     }  
     def format_latex_name(name):
             name = str(name)
-            
-            # אם כבר קיים קו תחתון בשם (למשל R_d או R_{d})
             if '_' in name:
                 parts = name.split('_', 1)
                 base = parts[0]
-                # מנקים סוגריים מסולסלים אם המודל כבר שם אותם
                 sub = parts[1].replace('{', '').replace('}', '')
                 return f"{base}_{{{sub}}}"
-            
-            # אם אין קו תחתון, אבל יש יותר מאות אחת (למשל Rd או gm)
             if len(name) > 1:
                 return f"{name[0]}_{{{name[1:]}}}"
-                
-            # אם זו רק אות אחת (למשל R או C)
             return name
     def format_unit(val):
         if val == 0: 
