@@ -300,6 +300,8 @@ with col_in:
         elif paste_result.image_data is not None:
             st.image(paste_result.image_data, caption="Pasted circuit", width=350)
             img = paste_result.image_data
+        elif img is not None:
+            st.image(img, caption="Loaded circuit from project", width=350)
     elif input_method == "✏️ Draw Circuit":
             st.write("Draw your schematic directly (use standard symbols):")
             col_tools1, col_tools2 = st.columns([3, 1])
