@@ -143,6 +143,7 @@ def analyze_circuit(image, netlist_text, analysis_request, derivation_steps_flag
     return None
 
 def optimize_circuit(bounded_param_list, image, formula, analysis_request, circuit_uses):
+    model = genai.GenerativeModel('gemini-2.5-pro')
     prompt = """
     You are an expert Analog IC Design Engineer.
     Input provided:
@@ -162,6 +163,30 @@ def optimize_circuit(bounded_param_list, image, formula, analysis_request, circu
         "optimization_advice": "Detailed advice on how to adjust the parameters and why"
     }
     """
+    content_inputs = [prompt]
+    if image:
+        content_inputs.append(image)
+    if formula:
+        content_inputs.append(f"Symbolic Formula:\n{formula}")
+    if analysis_request:
+        content_inputs.append(f"Analysis Request:\n{analysis_request}")
+    if circuit_uses:
+        content_inputs.append(f"Circuit Use Cases:\n{circuit_uses}")   
+    response = model.generate_content(content_inputs)
+    text = response.text.replace("```json", "").replace("```", "").strip()
+    match = re.search(r'\{.*\}', response.text, re.DOTALL)
+    if match:
+        try:
+            # Clean the JSON string to remove control characters
+            json_str = match.group()
+            # Remove common problematic control characters
+            json_str = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', json_str)
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            print(f"JSON parsing error: {e}")
+            print(f"Raw response: {response.text[:500]}...")
+            return None
+    return None
 
 def assign_param_bounds(param_list):
     bounds_config = {
@@ -251,20 +276,13 @@ def create_project_export(img, netlist_text, analysis_request, res, advisor_res=
     return json.dumps(project_data, indent=4)
 
 def render_save_project_section(img, netlist_content, analysis_request, res, advisor_res):
-    """
-    מייצרת כפתור הורדה לשמירת הפרויקט, עם שם קובץ דינמי מבוסס טופולוגיה.
-    """
+    # Nadine: We need to set this function to save in the common folder in sharepoint. 
     if not res:
         return 
-
     st.markdown("---")
     st.subheader("💾 Save Project")
-    
-    # 1. שליפת שם הטופולוגיה וניקוי תווים בעייתיים
     topology_name = res.get('topology', 'circuit_project')
     safe_filename = re.sub(r'[\\/*?:"<>|]', "", topology_name).replace(" ", "_") + ".json"
-    
-    # 2. יצירת תוכן ה-JSON מראש
     json_export = create_project_export(
         img, 
         netlist_content, 
@@ -272,10 +290,7 @@ def render_save_project_section(img, netlist_content, analysis_request, res, adv
         res,
         advisor_res
     )
-    
     st.info("💡 Tip: To save directly to your SharePoint folder, ensure your browser is set to 'Ask where to save each file before downloading'.")
-    
-    # 3. יצירת כפתור ההורדה
     st.download_button(
         label=f"Download {safe_filename}",
         data=json_export,
@@ -434,7 +449,17 @@ with col_out:
         H_latex_formula = res.get('H_latex_formula', '0')
         topology = res.get('topology', 'Unknown')
         params = assign_param_bounds(res.get('params', []))
-        print(z_latex)
+        if st.session_state.get('opt_res'):
+                    opt_dict = st.session_state['opt_res'].get("optimized_parameters", {})
+                    for p in params:
+                        raw_name = p['name'].replace('_', '').replace('{', '').replace('}', '')
+                        new_val = None
+                        if p['name'] in opt_dict:
+                            new_val = opt_dict[p['name']]
+                        elif raw_name in opt_dict:
+                            new_val = opt_dict[raw_name]
+                        if new_val is not None:
+                            p['value'] = str(new_val)
         st.success(f"**Topology:** {res.get('topology')}")
         st.latex(rf"\large {H_latex_formula}")
         st.markdown("---")
@@ -504,12 +529,35 @@ with col_out:
             unsafe_allow_html=True
         )
         circuit_uses = st.text_area("Describe the use cases of the circuit (for example: low noise amplifier for 1GHz, power amplifier for 100MHz etc.):", height=150)
-        if st.button("AI Circuit Advisor"):
-            if not img:
-                st.error("please upload something")
-            else:
-                with st.spinner("Analyzing circuit use cases..."):
-                    st.session_state['advisor_res'] = electrical_advisor(img, topology, analysis_request, circuit_uses)
+        col_btn1, col_btn2 = st.columns(2)
+        with col_btn1:
+            if st.button("AI Circuit Advisor"):
+                if not img:
+                    st.error("please upload something")
+                else:
+                    with st.spinner("Analyzing circuit use cases..."):
+                        st.session_state['advisor_res'] = electrical_advisor(img, topology, analysis_request, circuit_uses)
+        with col_btn2:
+            if st.button("⚡ Optimize Parameters", use_container_width=True):
+                if not img:
+                    st.error("Please upload something")
+                else:
+                    with st.spinner("Calculating optimal parameters..."):
+                        # שולחים ל-LLM את רשימת הפרמטרים הנוכחית בפורמט קריא כדי שידע את הגבולות
+                        param_list_str = json.dumps(params, indent=2)
+                        opt_result = optimize_circuit(param_list_str, img, H_latex_formula, analysis_request, circuit_uses)
+                        
+                        if opt_result:
+                            st.session_state['opt_res'] = opt_result
+                            st.success("Optimization complete! Updating calculator...")
+                            st.rerun() # מרעננים כדי שהמחשבון למעלה ייטען מחדש עם הערכים החדשים!
+        if st.session_state.get('opt_res'):
+            opt = st.session_state['opt_res']
+            with st.expander("⚡ Optimization Results & Advice", expanded=True):
+                st.markdown("**New Optimized Parameters:**")
+                st.json(opt.get("optimized_parameters", {}))
+                st.markdown("**Advice / Reasoning:**")
+                st.write(opt.get("optimization_advice", "No advice provided."))
         if st.session_state['advisor_res']:
             adv = st.session_state['advisor_res']
             with st.expander("AI Electrical Advisor - Detailed Recommendations and Derivation", expanded=True):
