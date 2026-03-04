@@ -251,31 +251,55 @@ def create_project_export(img, netlist_text, analysis_request, res, advisor_res=
     return json.dumps(project_data, indent=4)
 
 def render_save_project_section(img, netlist_content, analysis_request, res, advisor_res):
+    """
+    מציגה את ממשק השמירה ושומרת את הפרויקט לתיקייה מקומית 
+    """
     if not res:
-        return
+        return 
+
     st.markdown("---")
     st.subheader("💾 Save Project")
+    
     topology_name = res.get('topology', 'circuit_project')
     safe_filename = re.sub(r'[\\/*?:"<>|]', "", topology_name).replace(" ", "_") + ".json"
-    save_directory = st.text_input("Save directory:", value="C:\\Users\\ofekel\\Retym, Inc\\Retym, Inc. - Documents\\Engineering\\Analog\\Tools\\AI tools\\Projects\\")
+    
+    # החלפתי את הלוכסנים ללוכסנים קדמיים - פייתון בווינדוס מסתדר איתם מצוין
+    # וזה מונע בעיות של Escape Characters שקורות עם לוכסן אחורי
+    default_path = "C:/Users/ofekel/Retym, Inc/Retym, Inc. - Documents/Engineering/Analog/Tools/AI tools/Projects"
+    save_directory = st.text_input("Save directory:", value=default_path)
+    
     if st.button("Save to Folder", use_container_width=True):
-            try:
-                save_dir_path = Path(save_directory).resolve()
-                save_dir_path.mkdir(parents=True, exist_ok=True)
-                full_file_path = save_dir_path / safe_filename
+        try:
+            # המרה לאובייקט נתיב
+            save_dir_path = Path(save_directory)
+            
+            # וידוא שמדובר בנתיב מוחלט ולא יחסי לתיקיית העבודה
+            if not save_dir_path.is_absolute():
+                save_dir_path = save_dir_path.resolve()
+            
+            # הדפסת דיבאג למסך כדי שתראה בדיוק לאן זה הולך
+            st.info(f"🔍 Debug (Absolute Path): {save_dir_path}")
+            
+            # יצירת התיקייה
+            save_dir_path.mkdir(parents=True, exist_ok=True)
+            
+            full_file_path = save_dir_path / safe_filename
+            
+            json_export = create_project_export(
+                img, 
+                netlist_content, 
+                analysis_request, 
+                res,
+                advisor_res
+            )
+            
+            with open(full_file_path, "w", encoding="utf-8") as f:
+                f.write(json_export)
                 
-                json_export = create_project_export(
-                    img, 
-                    netlist_content, 
-                    analysis_request, 
-                    res,
-                    advisor_res
-                )
-                with open(full_file_path, "w", encoding="utf-8") as f:
-                    f.write(json_export)
-                st.success(f"Project saved successfully to: {full_file_path}")
-            except Exception as e:
-                st.error(f"Error saving file: {e}")
+            st.success(f"Project saved successfully! File: {safe_filename}")
+            
+        except Exception as e:
+            st.error(f"Error saving file: {e}")
 
 # --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
