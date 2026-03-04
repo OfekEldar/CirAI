@@ -198,9 +198,22 @@ def assign_param_bounds(param_list):
         'A': (0.1,100000)
     }  
     def format_latex_name(name):
-        if len(name) > 1:
-            return f"{name[0]}_{{{name[1:]}}}"
-        return name
+            name = str(name)
+            
+            # אם כבר קיים קו תחתון בשם (למשל R_d או R_{d})
+            if '_' in name:
+                parts = name.split('_', 1)
+                base = parts[0]
+                # מנקים סוגריים מסולסלים אם המודל כבר שם אותם
+                sub = parts[1].replace('{', '').replace('}', '')
+                return f"{base}_{{{sub}}}"
+            
+            # אם אין קו תחתון, אבל יש יותר מאות אחת (למשל Rd או gm)
+            if len(name) > 1:
+                return f"{name[0]}_{{{name[1:]}}}"
+                
+            # אם זו רק אות אחת (למשל R או C)
+            return name
     def format_unit(val):
         if val == 0: 
             return "0"
