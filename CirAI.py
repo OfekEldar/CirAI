@@ -11,6 +11,7 @@ import numpy as np
 from video import show_guidde_video
 from io import BytesIO
 from PIL import Image
+from pathlib import Path
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
@@ -258,22 +259,23 @@ def render_save_project_section(img, netlist_content, analysis_request, res, adv
     safe_filename = re.sub(r'[\\/*?:"<>|]', "", topology_name).replace(" ", "_") + ".json"
     save_directory = st.text_input("Save directory:", value="C:\\Users\\ofekel\\Retym, Inc\\Retym, Inc. - Documents\\Engineering\\Analog\\Tools\\AI tools\\Projects")
     if st.button("Save to Folder", use_container_width=True):
-        try:
-            if not os.path.exists(save_directory):
-                os.makedirs(save_directory)
-            full_file_path = os.path.join(save_directory, safe_filename)
-            json_export = create_project_export(
-                img, 
-                netlist_content, 
-                analysis_request, 
-                res,
-                advisor_res
-            )
-            with open(full_file_path, "w", encoding="utf-8") as f:
-                f.write(json_export)
-            st.success(f"Project saved successfully to: {full_file_path}")
-        except Exception as e:
-            st.error(f"Error saving file: {e}")
+            try:
+                save_dir_path = Path(save_directory).resolve()
+                save_dir_path.mkdir(parents=True, exist_ok=True)
+                full_file_path = save_dir_path / safe_filename
+                
+                json_export = create_project_export(
+                    img, 
+                    netlist_content, 
+                    analysis_request, 
+                    res,
+                    advisor_res
+                )
+                with open(full_file_path, "w", encoding="utf-8") as f:
+                    f.write(json_export)
+                st.success(f"Project saved successfully to: {full_file_path}")
+            except Exception as e:
+                st.error(f"Error saving file: {e}")
 
 # --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
