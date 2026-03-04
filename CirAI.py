@@ -199,7 +199,7 @@ def assign_param_bounds(param_list):
     }  
     def format_latex_name(name):
         if len(name) > 1:
-            return f"{name[0]}_{{{name[1:]}}}"
+            return f"{name[0]}_{{name[1:]}}"
         return name
     def format_unit(val):
         if val == 0: 
