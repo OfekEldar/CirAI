@@ -173,6 +173,7 @@ def assign_param_bounds(param_list):
     for param in param_list:
         name = str(param) 
         min_val, max_val = 0, 0 
+        
         if name.startswith('gm'):
             min_val, max_val = bounds_config['gm']
         elif name.startswith('R'):
@@ -188,9 +189,19 @@ def assign_param_bounds(param_list):
         else:
             print(f"Warning: Unknown parameter type for '{name}'")
             continue 
+            
         value = (min_val + max_val) / 2
         step = (max_val - min_val) / 100
-        result.append([name, value, min_val, max_val, step])
+        
+        # השינוי הוא כאן: דחיפת מילון במקום רשימה פשוטה
+        result.append({
+            "name": name,
+            "value": value,
+            "min": min_val,
+            "max": max_val,
+            "step": step
+        })
+        
     return result
 
 # --- GUI --- #
