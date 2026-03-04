@@ -169,6 +169,37 @@ def assign_param_bounds(param_list):
         'r': (1,10000),
         'A': (0.1,100000)
     }  
+    
+    # 1. פונקציית עזר לסידור השם בפורמט LaTeX למטה
+    def format_latex_name(name):
+        if len(name) > 1:
+            # לוקח את האות הראשונה, ואת כל השאר דוחף ל-subscript
+            return f"{name[0]}_{{{name[1:]}}}"
+        return name
+
+    # 2. פונקציית עזר להמרת המספרים ליחידות הנדסיות
+    def format_unit(val):
+        if val == 0: 
+            return "0"
+        
+        abs_val = abs(val)
+        if 1e-15 <= abs_val < 1e-12:
+            return f"{val * 1e15:g}f"
+        elif 1e-12 <= abs_val < 1e-9:
+            return f"{val * 1e12:g}p"
+        elif 1e-9 <= abs_val < 1e-6:
+            return f"{val * 1e9:g}n"
+        elif 1e-6 <= abs_val < 1e-3:
+            return f"{val * 1e6:g}u"
+        elif 1e-3 <= abs_val < 1:
+            return f"{val * 1e3:g}m"
+        elif 1e3 <= abs_val < 1e6:
+            return f"{val / 1e3:g}k"
+        elif 1e6 <= abs_val < 1e9:
+            return f"{val / 1e6:g}M"
+        
+        return f"{val:g}" # מחזיר את המספר כרגיל אם הוא לא בטווחים האלה
+
     result = []
     for param in param_list:
         name = str(param) 
@@ -193,13 +224,13 @@ def assign_param_bounds(param_list):
         value = (min_val + max_val) / 2
         step = (max_val - min_val) / 100
         
-        # השינוי הוא כאן: דחיפת מילון במקום רשימה פשוטה
+        # מכניסים את הנתונים אחרי שהעברנו אותם דרך פונקציות העזר
         result.append({
-            "name": name,
-            "value": value,
-            "min": min_val,
-            "max": max_val,
-            "step": step
+            "name": format_latex_name(name),
+            "value": format_unit(value),
+            "min": format_unit(min_val),
+            "max": format_unit(max_val),
+            "step": format_unit(step)
         })
         
     return result
