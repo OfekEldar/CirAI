@@ -249,6 +249,32 @@ def create_project_export(img, netlist_text, analysis_request, res, advisor_res=
     }
     return json.dumps(project_data, indent=4)
 
+def render_save_project_section(img, netlist_content, analysis_request, res, advisor_res):
+    if not res:
+        return
+    st.markdown("---")
+    st.subheader("💾 Save Project")
+    topology_name = res.get('topology', 'circuit_project')
+    safe_filename = re.sub(r'[\\/*?:"<>|]', "", topology_name).replace(" ", "_") + ".json"
+    save_directory = st.text_input("Save directory:", value="C:\\Users\\ofekel\\Retym, Inc\\Retym, Inc. - Documents\\Engineering\\Analog\\Tools\\AI tools\\Projects")
+    if st.button("Save to Folder", use_container_width=True):
+        try:
+            if not os.path.exists(save_directory):
+                os.makedirs(save_directory)
+            full_file_path = os.path.join(save_directory, safe_filename)
+            json_export = create_project_export(
+                img, 
+                netlist_content, 
+                analysis_request, 
+                res,
+                advisor_res
+            )
+            with open(full_file_path, "w", encoding="utf-8") as f:
+                f.write(json_export)
+            st.success(f"Project saved successfully to: {full_file_path}")
+        except Exception as e:
+            st.error(f"Error saving file: {e}")
+
 # --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
 st.title("CirAI:Electrical circuit Image or netlist to Interactive Math")
@@ -364,21 +390,13 @@ with col_in:
             with st.spinner("Analyzing the circuit..."):
                 st.session_state['res'] = analyze_circuit(img, netlist_content, analysis_request, derivation_steps_flag)
                 st.session_state['img'] = img
-    if st.session_state.get('res'):
-            json_export = create_project_export(
-                st.session_state.get('img'), 
-                netlist_content, 
-                analysis_request, 
-                st.session_state['res'],
-                st.session_state.get('advisor_res')
-            )
-            st.download_button(
-                label="💾 Save Project",
-                data=json_export,
-                file_name="analog_circuit_project.json",
-                mime="application/json",
-                use_container_width=True
-            )
+    render_save_project_section(
+        img=st.session_state.get('img'),
+        netlist_content=st.session_state.get('netlist_text'),
+        analysis_request=st.session_state.get('analysis_request'),
+        res=st.session_state.get('res'),
+        advisor_res=st.session_state.get('advisor_res')
+    )
     show_guidde_video()
 
 with col_out:
