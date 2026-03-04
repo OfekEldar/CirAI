@@ -179,12 +179,9 @@ class DesmosCalculatorManager {
                 {id: 'expressions', type: 'folder', title: 'Expressions'},
                 {id: 'params', type: 'folder', title: 'Params'},
                 {id: 'Z', latex: '{z_latex}', folderId: 'expressions'},
-                {id: 'f', latex: 'f_{z} = \\frac{1}{1+sR_{e}C_{e}}'},
                 /*{id: 'z_val', latex: `Z = ${this.zLatex}`},*/
                 {id: 'H_abs', latex: '20\\cdot\\operatorname{log}\\left(\\left|H(s)\\right|\\right)', folderId: 'expressions'},
                 {id: 'H_phase', latex: '\\phi_{H} = -90-\\frac{180}{\\pi}\\cdot\\arctan\\left(\\operatorname{real}\\left(H\\left(s\\right)\\right),\\operatorname{imag}\\left(H\\left(s\\right)\\right)\\right)', folderId: 'expressions'},
-                {id: 'f_abs', latex: '\\left|f_{z}\\right|', folderId: 'expressions'},
-                {id: 'f_phase', latex: '\\phi_f = -90-\\frac{180}{\\pi}\\cdot\\arctan\\left(\\operatorname{real}\\left(f_{z}\\right),\\operatorname{imag}\\left(f_{z}\\right)\\right)', folderId: 'expressions'},
                 {id: 's_def', latex: 's = i * 2 * \\pi * x', folderId: 'expressions'}
             ];
             if (Array.isArray(this.params)) {

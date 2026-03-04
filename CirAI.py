@@ -169,19 +169,13 @@ def assign_param_bounds(param_list):
         'r': (1,10000),
         'A': (0.1,100000)
     }  
-    
-    # 1. פונקציית עזר לסידור השם בפורמט LaTeX למטה
     def format_latex_name(name):
         if len(name) > 1:
-            # לוקח את האות הראשונה, ואת כל השאר דוחף ל-subscript
             return f"{name[0]}_{{{name[1:]}}}"
         return name
-
-    # 2. פונקציית עזר להמרת המספרים ליחידות הנדסיות
     def format_unit(val):
         if val == 0: 
             return "0"
-        
         abs_val = abs(val)
         if 1e-15 <= abs_val < 1e-12:
             return f"{val * 1e15:g}f"
@@ -197,14 +191,11 @@ def assign_param_bounds(param_list):
             return f"{val / 1e3:g}k"
         elif 1e6 <= abs_val < 1e9:
             return f"{val / 1e6:g}M"
-        
-        return f"{val:g}" # מחזיר את המספר כרגיל אם הוא לא בטווחים האלה
-
+        return f"{val:g}"
     result = []
     for param in param_list:
         name = str(param) 
         min_val, max_val = 0, 0 
-        
         if name.startswith('gm'):
             min_val, max_val = bounds_config['gm']
         elif name.startswith('R'):
@@ -220,11 +211,8 @@ def assign_param_bounds(param_list):
         else:
             print(f"Warning: Unknown parameter type for '{name}'")
             continue 
-            
         value = (min_val + max_val) / 2
         step = (max_val - min_val) / 100
-        
-        # מכניסים את הנתונים אחרי שהעברנו אותם דרך פונקציות העזר
         result.append({
             "name": format_latex_name(name),
             "value": format_unit(value),
@@ -232,7 +220,6 @@ def assign_param_bounds(param_list):
             "max": format_unit(max_val),
             "step": format_unit(step)
         })
-        
     return result
 
 # --- GUI --- #
@@ -342,10 +329,12 @@ with col_out:
             "8. **Axis scaling:** To change the scale of the axes, press shift and point to a specific axis, X-axis or Y-axis. Then change the size using the mouse wheel."
             )
     if st.session_state['res'] == None:
-        z_init = 'Z(s) = 0' 
+        z_init = "H(s) = \\frac{1}{1+R_{e}C_{e}s}"
         example_img = "LPF.jpg"
         st.image(example_img, caption="Example circuit analysis", width=350)
-        calculator_html = generate_calculator_html(z_init, params=[])
+        R_e = {"name": "R_e", "value": "100", "min": "1", "max": "1000", "step": "10"}
+        C_e = {"name": "C_e", "value": "1p", "min": "1f", "max": "10p", "step": "0.1p"}
+        calculator_html = generate_calculator_html(z_init, params=[R_e, C_e])
         st.components.v1.html(calculator_html, height=600)
     elif st.session_state['res']:
         res = st.session_state['res']
