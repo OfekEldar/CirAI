@@ -329,7 +329,7 @@ with col_out:
             "8. **Axis scaling:** To change the scale of the axes, press shift and point to a specific axis, X-axis or Y-axis. Then change the size using the mouse wheel."
             )
     if st.session_state['res'] == None:
-        z_init = "H(s) = \\frac{1}{1+R_{e}C_{e}s}"
+        z_init = """H(s) = 1/(1+R_{e}C_{e}s)"""
         example_img = "LPF.jpg"
         st.image(example_img, caption="Example circuit analysis", width=350)
         R_e = {"name": "R_e", "value": "100", "min": "1", "max": "1000", "step": "10"}
