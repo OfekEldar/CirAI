@@ -269,8 +269,8 @@ with col_in:
             loaded_data = json.loads(file_content)
             
             # 2. שחזור התמונה (תומך גם ב-img וגם ב-imag למקרה שיש לך קבצים ישנים)
-            img_data = loaded_data.get("img") or loaded_data.get("imag")
-            st.session_state['img'] = base64_to_image(img_data)
+            img = loaded_data.get("img") or loaded_data.get("imag")
+            st.session_state['img'] = base64_to_image(img)
             
             # 3. שחזור טקסטים
             st.session_state['netlist_text'] = loaded_data.get("netlist_text", "")
