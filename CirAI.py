@@ -264,36 +264,22 @@ with col_in:
     uploaded_file = st.file_uploader("Upload project file", type=["json"])
     if uploaded_file is not None:
         try:
-            # 1. קריאה בטוחה של תוכן הקובץ ישירות מהזיכרון
             file_content = uploaded_file.getvalue().decode("utf-8")
             loaded_data = json.loads(file_content)
-            
-            # 2. שחזור התמונה (תומך גם ב-img וגם ב-imag למקרה שיש לך קבצים ישנים)
             img = loaded_data.get("img") or loaded_data.get("imag")
             st.session_state['img'] = base64_to_image(img)
-            
-            # 3. שחזור טקסטים
             st.session_state['netlist_text'] = loaded_data.get("netlist_text", "")
-            
-            # 4. שחזור ה-res (החלק שחשוב ל-Desmos)
             if loaded_data.get("res"):
                 st.session_state['res'] = loaded_data["res"]
             else:
-                # תאימות לאחור: אם העלית קובץ ישן ששמרת לפני העדכון האחרון שלנו
                 st.session_state['res'] = {
                     "H_latex": loaded_data.get("formula", ""),
                     "H_latex_formula": loaded_data.get("formula", ""),
                     "params": loaded_data.get("params", []),
                     "topology": "Loaded Project (Legacy)"
-                }
-            
+                } 
             st.session_state['advisor_res'] = loaded_data.get("advisor_res")
-            
             st.success("Project loaded successfully!")
-            
-            # שמתי לב שהסרנו את st.rerun(). 
-            # Streamlit ימשיך לרוץ עכשיו למטה ל-col_out עם הנתונים המעודכנים.
-            
         except Exception as e:
             st.error(f"Error loading project: {e}")
     analysis_request = st.text_input("Function to analyze (for example: Vout/Vin, Z(Vout) etc.):", value="Vout")
@@ -302,8 +288,8 @@ with col_in:
         ["🖼️ Upload / Paste", "✏️ Draw Circuit", "📝 Netlist"], 
         horizontal=True
     )
-    img = None
-    netlist_content = None
+    img = st.session_state.get('img', None)
+    netlist_content = st.session_state.get('netlist_text', None)
     if input_method == "🖼️ Upload / Paste":
         st.write("Upload or paste a circuit image:")
         uploaded_file = st.file_uploader("Upload circuit image", type=["png", "jpg", "jpeg"])
