@@ -9,6 +9,8 @@ import base64
 import os
 import numpy as np
 from video import show_guidde_video
+from io import BytesIO
+from PIL import Image
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
@@ -222,6 +224,31 @@ def assign_param_bounds(param_list):
         })
     return result
 
+def image_to_base64(img):
+    if img is None:
+        return None
+    buffered = BytesIO()
+    img.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    return img_str
+
+def base64_to_image(base64_str):
+    if not base64_str:
+        return None
+    img_data = base64.b64decode(base64_str)
+    img = Image.open(BytesIO(img_data))
+    return img
+
+def create_project_export(img, netlist_text, analysis_request, res, advisor_res=None):
+    project_data = {
+        "img": image_to_base64(img),
+        "netlist_text": netlist_text,
+        "analysis_request": analysis_request,
+        "res": res, 
+        "advisor_res": advisor_res 
+    }
+    return json.dumps(project_data, indent=4)
+
 # --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
 st.title("CirAI:Electrical circuit Image or netlist to Interactive Math")
@@ -242,6 +269,25 @@ with col_in:
     )
     img = None
     netlist_content = None
+    uploaded_file = st.file_uploader("Upload project file", type=["json"])
+    if uploaded_file is not None:
+            try:
+                loaded_data = json.load(uploaded_file)
+                st.session_state['img'] = base64_to_image(loaded_data.get("img"))
+                st.session_state['netlist_text'] = loaded_data.get("netlist_text", "")
+                st.session_state['res'] = loaded_data.get("res") 
+                st.session_state['advisor_res'] = loaded_data.get("advisor_res")
+                if not st.session_state['res'] and loaded_data.get("formula"):
+                    st.session_state['res'] = {
+                        "H_latex": loaded_data.get("formula"),
+                        "H_latex_formula": loaded_data.get("formula"),
+                        "params": loaded_data.get("params", []),
+                        "topology": "Loaded Project"
+                    }
+                st.success("Project loaded successfully!")
+                st.rerun()    
+            except Exception as e:
+                st.error(f"Error loading project: {e}")
     if input_method == "🖼️ Upload / Paste":
         st.write("Upload or paste a circuit image:")
         uploaded_file = st.file_uploader("Upload circuit image", type=["png", "jpg", "jpeg"])
@@ -314,6 +360,21 @@ with col_in:
             with st.spinner("Analyzing the circuit..."):
                 st.session_state['res'] = analyze_circuit(img, netlist_content, analysis_request, derivation_steps_flag)
                 st.session_state['img'] = img
+    if st.session_state.get('res'):
+            json_export = create_project_export(
+                st.session_state.get('img'), 
+                netlist_content, 
+                analysis_request, 
+                st.session_state['res'],
+                st.session_state.get('advisor_res')
+            )
+            st.download_button(
+                label="💾 Save Project",
+                data=json_export,
+                file_name="analog_circuit_project.json",
+                mime="application/json",
+                use_container_width=True
+            )
     show_guidde_video()
 
 with col_out:
