@@ -325,7 +325,6 @@ def render_feedback_section(project_data):
                     st.session_state['project_data']['feedbacks'].append(new_feedback)
                     project_data = st.session_state['project_data'] 
                     st.success("Feedback recorded!")
-                    return new_feedback
         if feedbacks:
             st.markdown("**Previous Feedback on this circuit:**")
             for fb in feedbacks:
