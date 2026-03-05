@@ -325,13 +325,14 @@ def render_feedback_section(project_data):
                     st.session_state['project_data']['feedbacks'].append(new_feedback)
                     project_data = st.session_state['project_data'] 
                     st.success("Feedback recorded!")
-                    st.rerun()
         if feedbacks:
             st.markdown("**Previous Feedback on this circuit:**")
             for fb in feedbacks:
                 st.caption(f"🕒 {fb['timestamp']} | **{fb['type']}**")
                 st.write(f"> {fb['description']}")
-        project_data = st.session_state['project_data']
+            project_data = st.session_state['project_data']
+            st.rerun()
+        
     
 # --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
