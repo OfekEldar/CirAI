@@ -13,8 +13,21 @@ from io import BytesIO
 from PIL import Image
 from pathlib import Path
 import datetime
+from streamlit_oauth import OAuth2Component
+import jwt
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
+CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
+CLIENT_SECRET = st.secrets["GOOGLE_CLIENT_SECRET"]
+REDIRECT_URI = st.secrets.get("REDIRECT_URI", "http://localhost:8501")
+oauth2 = OAuth2Component(
+    CLIENT_ID, 
+    CLIENT_SECRET, 
+    "https://accounts.google.com/o/oauth2/v2/auth", 
+    "https://oauth2.googleapis.com/token", 
+    "https://oauth2.googleapis.com/token", 
+    "https://oauth2.googleapis.com/revoke"
+)
 genai.configure(api_key=GOOGLE_API_KEY)
 electrical_advisor_flag = 0
 derivation_steps_flag = 0
@@ -279,6 +292,9 @@ def base64_to_image(base64_str):
 def create_project_export(project_data):
     export_dict = project_data.copy()
     export_dict["img"] = image_to_base64(project_data.get("img"))
+    if 'user_info' in st.session_state:
+        export_dict["author_name"] = st.session_state['user_info'].get('name', 'Unknown')
+        export_dict["author_email"] = st.session_state['user_info'].get('email', 'Unknown')
     return json.dumps(export_dict, indent=4)
 
 def render_save_project_section(project_data):
@@ -331,9 +347,36 @@ def render_feedback_section(project_data):
                 st.caption(f"🕒 {fb['timestamp']} | **{fb['type']}**")
                 st.write(f"> {fb['description']}")
             project_data = st.session_state['project_data']
-    
+
+def connection():
+    if 'google_token' not in st.session_state:
+        st.title("🔐 התחברות למערכת CirAI")
+        st.write("אנא התחבר עם חשבון הגוגל שלך כדי להתחיל לנתח מעגלים ולשמור פרויקטים.")
+        result = oauth2.authorize_button(
+            name="התחבר עם Google",
+            redirect_uri=REDIRECT_URI,
+            scope="openid email profile",
+            icon="https://www.google.com/favicon.ico",
+            use_container_width=True
+        )
+        if result and 'token' in result:
+            st.session_state['google_token'] = result.get('token')
+            st.rerun()
+        st.stop()
+    token = st.session_state['google_token']
+    user_info = jwt.decode(token['id_token'], options={"verify_signature": False})
+    st.session_state['user_info'] = user_info
+    with st.sidebar:
+        st.write(f"Hello, **{user_info['name']}**")
+        if st.button("Logout"):
+            del st.session_state['google_token']
+            del st.session_state['user_info']
+            st.rerun()
+        st.divider()
+
 # --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
+connection()
 if 'project_data' not in st.session_state:
     st.session_state['project_data'] = {
         "img": None,
