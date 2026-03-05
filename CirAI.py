@@ -357,7 +357,6 @@ with col_in:
         file_content = uploaded_file.getvalue().decode("utf-8")
         if st.session_state.get('last_uploaded_file_content') != file_content:
             try:
-                
                 loaded_data = json.loads(file_content)
                 img_data = loaded_data.get("img") or loaded_data.get("imag")
                 st.session_state['project_data']['img'] = base64_to_image(img_data)
@@ -379,7 +378,7 @@ with col_in:
                 st.session_state['project_data']['advisor_res'] = loaded_data.get("advisor_res")
                 st.session_state['project_data']['opt_res'] = loaded_data.get("opt_res")
                 st.session_state['project_data']['feedbacks'] = loaded_data.get("feedbacks", [])
-                st.session_state['last_uploaded_file'] = uploaded_file.file_id
+                st.session_state['last_uploaded_file_content'] = file_content
                 st.success("Project loaded successfully!")
             except Exception as e:
                 st.error(f"Error loading project: {e}")
