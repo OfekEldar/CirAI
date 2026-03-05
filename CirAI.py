@@ -309,6 +309,7 @@ def render_feedback_section():
     with st.expander("🚩 Report an Issue / Team Feedback"):
         feedback_type = st.selectbox("Type of issue:", ["Incorrect Formula", "Wrong Component Value", "Other"], key="fb_type")
         feedback_text = st.text_area("Describe the mistake:", height=100, key="fb_text")
+        
         if st.button("Submit Feedback to Project", use_container_width=True):
             if feedback_text.strip():
                 new_feedback = {
@@ -321,13 +322,15 @@ def render_feedback_section():
                 st.session_state['project_data']['feedbacks'].append(new_feedback)
                 st.success("Feedback recorded! Refreshing...")
                 st.rerun()
-            feedbacks = st.session_state['project_data'].get('feedbacks', [])
-            if feedbacks:
-                st.markdown("**Previous Feedback on this circuit:**")
-                for fb in feedbacks:
-                    st.caption(f"🕒 {fb['timestamp']} | **{fb['type']}**")
-                    st.write(f"> {fb['description']}")
-
+                
+        # --- התיקון כאן: הזזנו את הבלוק הזה שמאלה, מחוץ ל-if של הכפתור ---
+        feedbacks = st.session_state['project_data'].get('feedbacks', [])
+        if feedbacks:
+            st.markdown("**Previous Feedback on this circuit:**")
+            for fb in feedbacks:
+                st.caption(f"🕒 {fb['timestamp']} | **{fb['type']}**")
+                st.write(f"> {fb['description']}")
+                
 # --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
 if 'project_data' not in st.session_state:
