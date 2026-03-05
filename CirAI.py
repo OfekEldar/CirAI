@@ -302,52 +302,35 @@ def render_save_project_section(project_data):
         use_container_width=True
     )
 
-def submit_feedback_callback():
-    """
-    פונקציית Callback שרצה ברגע שלוחצים על הכפתור, לפני ריענון המסך.
-    כאן מותר ובטוח לאפס את תיבת הטקסט!
-    """
-    text = st.session_state.fb_text
-    fb_type = st.session_state.fb_type
-    
-    if text.strip():
-        new_feedback = {
-            "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-            "type": fb_type,
-            "description": text
-        }
-        
-        # הגנה למקרה שהמערך לא קיים
-        if not st.session_state['project_data'].get('feedbacks'):
-            st.session_state['project_data']['feedbacks'] = []
-            
-        # דחיפה לפרויקט
-        st.session_state['project_data']['feedbacks'].append(new_feedback)
-        
-        # איפוס בטוח של תיבת הטקסט!
-        st.session_state.fb_text = ""
-
 def render_feedback_section():
     if not st.session_state['project_data'].get('res'):
+        st.info("Analyze a circuit first to enable feedback and improvement suggestions.")
         return
-        
     st.markdown("---")
-    
-    # 1. תצוגה של פידבקים קיימים
-    feedbacks = st.session_state['project_data'].get('feedbacks', [])
-    if feedbacks:
-        st.markdown("### 🚩 Team Feedback & Known Issues")
-        for fb in feedbacks:
-            st.info(f"**{fb['type']}** ({fb['timestamp']})\n\n{fb['description']}")
-
-    # 2. אזור לדיווח על בעיה חדשה
-    with st.expander("➕ Report a New Issue / Add Feedback"):
-        st.selectbox("Type of issue:", ["Incorrect Formula", "Wrong Component Value", "Topology Misclassification", "Other"], key="fb_type")
-        st.text_area("Describe the mistake:", height=100, key="fb_text")
-        
-        # הקישור ל-Callback מתבצע כאן בעזרת on_click. אין צורך ב-if או ב-st.rerun!
-        st.button("Submit Feedback to Project", use_container_width=True, on_click=submit_feedback_callback)
-
+    with st.expander("🚩 Report an Issue / Team Feedback"):
+        feedback_type = st.selectbox("Type of issue:", ["Incorrect Formula", "Wrong Component Value", "Other"], key="fb_type")
+        feedback_text = st.text_area("Describe the mistake:", height=100, key="fb_text")
+        if st.button("Submit Feedback to Project", use_container_width=True):
+            if feedback_text.strip():
+                new_feedback = {
+                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "type": feedback_type,
+                    "description": feedback_text
+                }
+                if 'feedbacks' not in st.session_state['project_data']:
+                    st.session_state['project_data']['feedbacks'] = []
+                st.session_state['project_data']['feedbacks'].append(new_feedback)
+                st.success("Feedback recorded! Refreshing...")
+                st.rerun()
+                
+        # --- התיקון כאן: הזזנו את הבלוק הזה שמאלה, מחוץ ל-if של הכפתור ---
+        feedbacks = st.session_state['project_data'].get('feedbacks', [])
+        if feedbacks:
+            st.markdown("**Previous Feedback on this circuit:**")
+            for fb in feedbacks:
+                st.caption(f"🕒 {fb['timestamp']} | **{fb['type']}**")
+                st.write(f"> {fb['description']}")
+                
 # --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
 if 'project_data' not in st.session_state:
