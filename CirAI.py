@@ -19,7 +19,7 @@ import jwt
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
 CLIENT_SECRET = st.secrets["GOOGLE_CLIENT_SECRET"]
-REDIRECT_URI = st.secrets.get("REDIRECT_URI", "https://829w23be5rbdxam99fd4do.streamlit.app/")
+REDIRECT_URI = st.secrets.get("REDIRECT_URI", "https://829w23be5rbdxam99fd4do.streamlit.app")
 oauth2 = OAuth2Component(
     CLIENT_ID, 
     CLIENT_SECRET, 
