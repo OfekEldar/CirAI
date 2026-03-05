@@ -5,3 +5,4 @@ google-generativeai
 Pillow
 streamlit_oauth
 jwt
+PyJWT
