@@ -579,7 +579,7 @@ with col_out:
                             st.session_state['project_data']['opt_res'] = opt_result
                             st.success("Optimization complete! Updating calculator...")
                             st.rerun()
-        st.session_state['project_data']['feedbacks'].append(render_feedback_section(st.session_state['project_data']))
+        render_feedback_section(st.session_state['project_data'])
         with st.expander("🔧 Debugging Information"):
                     st.markdown("""
                     **To debug the calculator:**
@@ -596,16 +596,12 @@ with col_out:
                     """)
                     st.markdown("---")
                     st.markdown("### 🧠 Live System Memory (`project_data`)")
-                    
-                    # יצירת עותק בטוח להדפסה (כדי לא לקרוס על הדפסת אובייקט התמונה)
                     debug_dict = {}
                     for key, value in st.session_state['project_data'].items():
                         if key == 'img':
                             debug_dict[key] = "🖼️ [Image Object]" if value is not None else None
                         else:
                             debug_dict[key] = value
-                            
-                    # הדפסת הנתונים בצורה של JSON אינטראקטיבי שנוח לקרוא
                     st.json(debug_dict)
         if st.session_state['project_data'].get('opt_res'):
             opt = st.session_state['project_data']['opt_res']
