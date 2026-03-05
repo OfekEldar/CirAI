@@ -359,6 +359,11 @@ with col_in:
             img_data = loaded_data.get("img") or loaded_data.get("imag")
             st.session_state['project_data']['img'] = base64_to_image(img_data)
             st.session_state['project_data']['netlist_text'] = loaded_data.get("netlist_text", "")
+            st.session_state['project_data']['analysis_request'] = loaded_data.get("analysis_request", "")
+            st.session_state['project_data']['circuit_uses'] = loaded_data.get("circuit_uses", "")
+            st.session_state['project_data']['advisor_res'] = loaded_data.get("advisor_res")
+            st.session_state['project_data']['opt_res'] = loaded_data.get("opt_res")
+            st.session_state['project_data']['feedbacks'] = loaded_data.get("feedbacks", [])
             if loaded_data.get("res"):
                 st.session_state['project_data']['res'] = loaded_data["res"]
             else:
