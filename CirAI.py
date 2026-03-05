@@ -306,31 +306,42 @@ def render_feedback_section():
     if not st.session_state['project_data'].get('res'):
         return
     st.markdown("---")
-    with st.expander("🚩 Report an Issue / Team Feedback"):
-        feedback_type = st.selectbox("Type of issue:", ["Incorrect Formula", "Wrong Component Value", "Other"], key="fb_type")
+    
+    # 1. תצוגה של פידבקים קיימים (מחוץ לאקספנדר, כדי שתמיד יראו אותם מול העיניים!)
+    feedbacks = st.session_state['project_data'].get('feedbacks', [])
+    if feedbacks:
+        st.markdown("### 🚩 Team Feedback & Known Issues")
+        for fb in feedbacks:
+            # שימוש ב-info כדי לתת לזה בולטות ויזואלית על המסך
+            st.info(f"**{fb['type']}** ({fb['timestamp']})\n\n{fb['description']}")
+
+    # 2. אזור לדיווח על בעיה חדשה (בתוך האקספנדר)
+    with st.expander("➕ Report a New Issue / Add Feedback"):
+        feedback_type = st.selectbox("Type of issue:", ["Incorrect Formula", "Wrong Component Value", "Topology Misclassification", "Other"], key="fb_type")
         feedback_text = st.text_area("Describe the mistake:", height=100, key="fb_text")
         
         if st.button("Submit Feedback to Project", use_container_width=True):
-            if feedback_text.strip():
+            if not feedback_text.strip():
+                st.warning("Please enter a description.")
+            else:
                 new_feedback = {
                     "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "type": feedback_type,
                     "description": feedback_text
                 }
-                if 'feedbacks' not in st.session_state['project_data']:
+                
+                # הגנה למקרה שהמערך לא הוגדר כראוי
+                if not st.session_state['project_data'].get('feedbacks'):
                     st.session_state['project_data']['feedbacks'] = []
+                    
                 st.session_state['project_data']['feedbacks'].append(new_feedback)
-                st.success("Feedback recorded! Refreshing...")
+                
+                # ריקון תיבת הטקסט דרך ה-session_state לקראת הריענון
+                st.session_state['fb_text'] = ""
+                
+                # הרענון יקפיץ את התצוגה למעלה מיד ויציג את הבלוק הכחול של הפידבק
                 st.rerun()
-                
-        # --- התיקון כאן: הזזנו את הבלוק הזה שמאלה, מחוץ ל-if של הכפתור ---
-        feedbacks = st.session_state['project_data'].get('feedbacks', [])
-        if feedbacks:
-            st.markdown("**Previous Feedback on this circuit:**")
-            for fb in feedbacks:
-                st.caption(f"🕒 {fb['timestamp']} | **{fb['type']}**")
-                st.write(f"> {fb['description']}")
-                
+
 # --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
 if 'project_data' not in st.session_state:
