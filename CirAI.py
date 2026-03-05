@@ -307,24 +307,25 @@ def render_feedback_section():
         st.info("Analyze a circuit first to enable feedback and improvement suggestions.")
         return
     st.markdown("---")
-    with st.expander("🚩 Report an Issue / Team Feedback"):
-        feedback_type = st.selectbox("Type of issue:", ["Incorrect Formula", "Wrong Component Value", "Other"], key="fb_type")
-        feedback_text = st.text_area("Describe the mistake:", height=100, key="fb_text")
-        if st.button("Submit Feedback to Project", use_container_width=True):
-            if feedback_text.strip():
-                new_feedback = {
-                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                    "type": feedback_type,
-                    "description": feedback_text
-                }
-                if 'feedbacks' not in st.session_state['project_data']:
-                    st.session_state['project_data']['feedbacks'] = []
-                st.session_state['project_data']['feedbacks'].append(new_feedback)
-                st.success("Feedback recorded! Refreshing...")
-                st.rerun()
-                
-        # --- התיקון כאן: הזזנו את הבלוק הזה שמאלה, מחוץ ל-if של הכפתור ---
-        feedbacks = st.session_state['project_data'].get('feedbacks', [])
+    feedbacks = st.session_state['project_data'].get('feedbacks', [])
+    with st.expander("🚩 Report an Issue / Team Feedback", expanded=bool(feedbacks)):
+        with st.form(key="feedback_form", clear_on_submit=True):
+            feedback_type = st.selectbox("Type of issue:", ["Incorrect Formula", "Wrong Component Value", "Other"])
+            feedback_text = st.text_area("Describe the mistake:", height=100)
+            submit_button = st.form_submit_button("Submit Feedback to Project", use_container_width=True)
+            if submit_button:
+                if feedback_text.strip():
+                    new_feedback = {
+                        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "type": feedback_type,
+                        "description": feedback_text
+                    }
+                    
+                    if 'feedbacks' not in st.session_state['project_data']:
+                        st.session_state['project_data']['feedbacks'] = []        
+                    st.session_state['project_data']['feedbacks'].append(new_feedback)
+                    st.session_state['project_data'] = st.session_state['project_data'] 
+                    st.success("Feedback recorded!")
         if feedbacks:
             st.markdown("**Previous Feedback on this circuit:**")
             for fb in feedbacks:
@@ -458,6 +459,7 @@ with col_in:
                     st.session_state['project_data']['img'] = img
                     st.session_state['project_data']['netlist_text'] = netlist_content
                     res = analyze_circuit(img, netlist_content, analysis_request, derivation_steps_flag)
+                    st.session_state['project_data']['res'] = res
     render_save_project_section(st.session_state['project_data'])
     show_guidde_video()
 
