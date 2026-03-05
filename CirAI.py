@@ -323,7 +323,7 @@ def render_feedback_section(project_data):
                     if 'feedbacks' not in st.session_state['project_data']:
                         st.session_state['project_data']['feedbacks'] = []
                     st.session_state['project_data']['feedbacks'].append(new_feedback)
-                    st.session_state['project_data'] = st.session_state['project_data'] 
+                    project_data = st.session_state['project_data'] 
                     st.success("Feedback recorded!")
         if feedbacks:
             st.markdown("**Previous Feedback on this circuit:**")
