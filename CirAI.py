@@ -350,10 +350,10 @@ def render_feedback_section(project_data):
 
 def connection():
     if 'google_token' not in st.session_state:
-        st.title("🔐 התחברות למערכת CirAI")
-        st.write("אנא התחבר עם חשבון הגוגל שלך כדי להתחיל לנתח מעגלים ולשמור פרויקטים.")
+        st.title("Connect Your Google Account")
+        st.write("Please connect your Google account to start analyzing circuits with CirAI.")
         result = oauth2.authorize_button(
-            name="התחבר עם Google",
+            name="Connect with Google",
             redirect_uri=REDIRECT_URI,
             scope="openid email profile",
             icon="https://www.google.com/favicon.ico",
