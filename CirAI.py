@@ -302,12 +302,12 @@ def render_save_project_section(project_data):
         use_container_width=True
     )
 
-def render_feedback_section():
-    if not st.session_state['project_data'].get('res'):
+def render_feedback_section(project_data):
+    if not project_data.get('res'):
         st.info("Analyze a circuit first to enable feedback and improvement suggestions.")
         return
     st.markdown("---")
-    feedbacks = st.session_state['project_data'].get('feedbacks', [])
+    feedbacks = project_data.get('feedbacks', [])
     with st.expander("🚩 Report an Issue / Team Feedback", expanded=bool(feedbacks)):
         with st.form(key="feedback_form", clear_on_submit=True):
             feedback_type = st.selectbox("Type of issue:", ["Incorrect Formula", "Wrong Component Value", "Other"])
@@ -320,11 +320,10 @@ def render_feedback_section():
                         "type": feedback_type,
                         "description": feedback_text
                     }
-                    
-                    if 'feedbacks' not in st.session_state['project_data']:
-                        st.session_state['project_data']['feedbacks'] = []        
-                    st.session_state['project_data']['feedbacks'].append(new_feedback)
-                    st.session_state['project_data'] = st.session_state['project_data'] 
+                    if 'feedbacks' not in project_data:
+                        project_data.append('feedbacks', [])        
+                    project_data['feedbacks'].append(new_feedback)
+                    st.session_state['project_data'] = project_data
                     st.success("Feedback recorded!")
         if feedbacks:
             st.markdown("**Previous Feedback on this circuit:**")
@@ -601,7 +600,7 @@ with col_out:
                             st.session_state['project_data']['opt_res'] = opt_result
                             st.success("Optimization complete! Updating calculator...")
                             st.rerun()
-        render_feedback_section()
+        render_feedback_section(project_data=st.session_state['project_data'])
         if st.session_state['project_data'].get('opt_res'):
             opt = st.session_state['project_data']['opt_res']
             with st.expander("⚡ Optimization Results & Advice", expanded=True):
