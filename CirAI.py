@@ -303,11 +303,11 @@ def render_save_project_section(project_data):
     )
 
 def render_feedback_section(project_data):
-    if not st.session_state['project_data'].get('res'):
+    if not project_data.get('res'):
         st.info("Analyze a circuit first to enable feedback and improvement suggestions.")
-        return
+        return 0
     st.markdown("---")
-    feedbacks = st.session_state['project_data'].get('feedbacks', [])
+    feedbacks = project_data.get('feedbacks', [])
     with st.expander("🚩 Report an Issue / Team Feedback", expanded=bool(feedbacks)):
         with st.form(key="feedback_form", clear_on_submit=True):
             feedback_type = st.selectbox("Type of issue:", ["Incorrect Formula", "Wrong Component Value", "Other"])
@@ -325,13 +325,15 @@ def render_feedback_section(project_data):
                     st.session_state['project_data']['feedbacks'].append(new_feedback)
                     project_data = st.session_state['project_data'] 
                     st.success("Feedback recorded!")
+                    return 1
         if feedbacks:
             st.markdown("**Previous Feedback on this circuit:**")
             for fb in feedbacks:
                 st.caption(f"🕒 {fb['timestamp']} | **{fb['type']}**")
                 st.write(f"> {fb['description']}")
             project_data = st.session_state['project_data']
-        
+            return 1
+        return 0
     
 # --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
@@ -581,7 +583,7 @@ with col_out:
                             st.session_state['project_data']['opt_res'] = opt_result
                             st.success("Optimization complete! Updating calculator...")
                             st.rerun()
-        render_feedback_section(project_data=st.session_state['project_data'])
+        render_feedback_section(st.session_state['project_data'])
         with st.expander("🔧 Debugging Information"):
                     st.markdown("""
                     **To debug the calculator:**
