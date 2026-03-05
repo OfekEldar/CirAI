@@ -518,6 +518,19 @@ with col_out:
             - Graph not displaying correctly: Verify complex mode is enabled
             - Axis issues: Check if log mode settings were applied
             """)
+            st.markdown("---")
+            st.markdown("### 🧠 Live System Memory (`project_data`)")
+            
+            # יצירת עותק בטוח להדפסה (כדי לא לקרוס על הדפסת אובייקט התמונה)
+            debug_dict = {}
+            for key, value in st.session_state['project_data'].items():
+                if key == 'img':
+                    debug_dict[key] = "🖼️ [Image Object]" if value is not None else None
+                else:
+                    debug_dict[key] = value
+                    
+            # הדפסת הנתונים בצורה של JSON אינטראקטיבי שנוח לקרוא
+            st.json(debug_dict)
         with st.expander("Watch full development"):
             st.write("Analysis process:")
             st.markdown(res.get('derivation_steps', "Not found"))
