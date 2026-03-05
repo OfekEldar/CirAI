@@ -305,6 +305,7 @@ def render_save_project_section(project_data):
 def render_feedback_section(project_data):
     if not project_data.get('res'):
         st.info("Analyze a circuit first to enable feedback and improvement suggestions.")
+        return
     st.markdown("---")
     feedbacks = project_data.get('feedbacks', [])
     with st.expander("🚩 Report an Issue / Team Feedback", expanded=bool(feedbacks)):
@@ -466,7 +467,6 @@ with col_in:
                     st.session_state['project_data']['netlist_text'] = netlist_content
                     res = analyze_circuit(img, netlist_content, analysis_request, derivation_steps_flag)
                     st.session_state['project_data']['res'] = res
-    render_save_project_section(st.session_state['project_data'])
     show_guidde_video()
 
 with col_out:
@@ -628,6 +628,7 @@ with col_out:
                 st.markdown(adv.get('component_advice', "Not found"))
                 st.markdown("**Recommended Articles:**")
                 st.markdown(adv.get('Recommended_articles_links', "Not found"))
+    render_save_project_section(st.session_state['project_data'])
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
 with st.sidebar:
