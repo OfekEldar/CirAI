@@ -377,6 +377,7 @@ with col_in:
             st.session_state['project_data']['advisor_res'] = loaded_data.get("advisor_res")
             st.session_state['project_data']['opt_res'] = loaded_data.get("opt_res")
             st.session_state['project_data']['feedbacks'] = loaded_data.get("feedbacks", [])
+            st.session_state['last_uploaded_file'] = uploaded_file.file_id
             st.success("Project loaded successfully!")
         except Exception as e:
             st.error(f"Error loading project: {e}")
@@ -511,33 +512,6 @@ with col_out:
         st.latex(rf"\large {H_latex_formula}")
         st.markdown("---")
         st.info("**Debugging:** Open browser console (F12) to see detailed calculator initialization logs and verify settings are applied correctly.")
-        with st.expander("🔧 Debugging Information"):
-            st.markdown("""
-            **To debug the calculator:**
-            1. Open browser Developer Tools (F12)
-            2. Go to the Console tab
-            3. Look for initialization messages starting with "Initializing Desmos Calculator..."
-            4. Check if settings are applied successfully
-            5. Use `window.desmosCalc` in console to access the calculator object directly
-            
-            **Common issues:**
-            - Settings not applied: Check console for error messages
-            - Graph not displaying correctly: Verify complex mode is enabled
-            - Axis issues: Check if log mode settings were applied
-            """)
-            st.markdown("---")
-            st.markdown("### 🧠 Live System Memory (`project_data`)")
-            
-            # יצירת עותק בטוח להדפסה (כדי לא לקרוס על הדפסת אובייקט התמונה)
-            debug_dict = {}
-            for key, value in st.session_state['project_data'].items():
-                if key == 'img':
-                    debug_dict[key] = "🖼️ [Image Object]" if value is not None else None
-                else:
-                    debug_dict[key] = value
-                    
-            # הדפסת הנתונים בצורה של JSON אינטראקטיבי שנוח לקרוא
-            st.json(debug_dict)
         with st.expander("Watch full development"):
             st.write("Analysis process:")
             st.markdown(res.get('derivation_steps', "Not found"))
@@ -607,6 +581,33 @@ with col_out:
                             st.success("Optimization complete! Updating calculator...")
                             st.rerun()
         render_feedback_section(project_data=st.session_state['project_data'])
+        with st.expander("🔧 Debugging Information"):
+                    st.markdown("""
+                    **To debug the calculator:**
+                    1. Open browser Developer Tools (F12)
+                    2. Go to the Console tab
+                    3. Look for initialization messages starting with "Initializing Desmos Calculator..."
+                    4. Check if settings are applied successfully
+                    5. Use `window.desmosCalc` in console to access the calculator object directly
+                    
+                    **Common issues:**
+                    - Settings not applied: Check console for error messages
+                    - Graph not displaying correctly: Verify complex mode is enabled
+                    - Axis issues: Check if log mode settings were applied
+                    """)
+                    st.markdown("---")
+                    st.markdown("### 🧠 Live System Memory (`project_data`)")
+                    
+                    # יצירת עותק בטוח להדפסה (כדי לא לקרוס על הדפסת אובייקט התמונה)
+                    debug_dict = {}
+                    for key, value in st.session_state['project_data'].items():
+                        if key == 'img':
+                            debug_dict[key] = "🖼️ [Image Object]" if value is not None else None
+                        else:
+                            debug_dict[key] = value
+                            
+                    # הדפסת הנתונים בצורה של JSON אינטראקטיבי שנוח לקרוא
+                    st.json(debug_dict)
         if st.session_state['project_data'].get('opt_res'):
             opt = st.session_state['project_data']['opt_res']
             with st.expander("⚡ Optimization Results & Advice", expanded=True):
