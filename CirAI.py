@@ -22,6 +22,7 @@ img, topology, analysis_request, circuit_uses = None, None, None, None
 performance_advice, power_advice, noise_advice, component_advice, Recommended_articles_links = None, None, None, None, None
 model = genai.GenerativeModel('gemini-2.5-pro')
 
+
 def load_static_file(filename):
     """Load content from static file"""
     file_path = os.path.join('static', filename)
@@ -275,31 +276,23 @@ def base64_to_image(base64_str):
     img = Image.open(BytesIO(img_data))
     return img
 
-def create_project_export(img, netlist_text, analysis_request, res, advisor_res=None):
-    project_data = {
-        "img": image_to_base64(img),
-        "netlist_text": netlist_text,
-        "analysis_request": analysis_request,
-        "res": res, 
-        "advisor_res": advisor_res 
-    }
-    return json.dumps(project_data, indent=4)
+def create_project_export(project_data):
+    export_dict = project_data.copy()
+    export_dict["img"] = image_to_base64(project_data.get("img"))
+    return json.dumps(export_dict, indent=4)
 
-def render_save_project_section(img, netlist_content, analysis_request, res, advisor_res):
+def render_save_project_section(project_data):
     # Nadine: We need to set this function to save in the common folder in sharepoint. 
+    # Note: Since the app is deployed on a server/container, we use download_button 
+    # and instruct users to point their browser download to the SharePoint sync folder.
+    res = project_data.get('res')
     if not res:
         return 
     st.markdown("---")
     st.subheader("💾 Save Project")
     topology_name = res.get('topology', 'circuit_project')
     safe_filename = re.sub(r'[\\/*?:"<>|]', "", topology_name).replace(" ", "_") + ".json"
-    json_export = create_project_export(
-        img, 
-        netlist_content, 
-        analysis_request, 
-        res,
-        advisor_res
-    )
+    json_export = create_project_export(project_data)
     st.info("💡 Tip: To save directly to your SharePoint folder, ensure your browser is set to 'Ask where to save each file before downloading'.")
     st.download_button(
         label=f"Download {safe_filename}",
@@ -310,48 +303,47 @@ def render_save_project_section(img, netlist_content, analysis_request, res, adv
     )
 
 def render_feedback_section():
-    if not st.session_state.get('res'):
+    if not st.session_state['project_data'].get('res'):
         return
     st.markdown("---")
     with st.expander("🚩 Report an Issue / Team Feedback"):
-        st.info("Did the AI make a mistake? Document it here so the tool and the team can learn for next time.")
-        feedback_type = st.selectbox(
-            "Type of issue:", 
-            ["Incorrect Formula", "Wrong Component Value", "Bad Optimization Advice", "Topology Misclassification", "Other"],
-            key="feedback_type_input"
-        )
-        feedback_text = st.text_area(
-            "Describe the mistake and the correct approach:", 
-            height=100, 
-            key="feedback_text_input"
-        )
+        feedback_type = st.selectbox("Type of issue:", ["Incorrect Formula", "Wrong Component Value", "Other"], key="fb_type")
+        feedback_text = st.text_area("Describe the mistake:", height=100, key="fb_text")
         if st.button("Submit Feedback to Project", use_container_width=True):
-            if not feedback_text.strip():
-                st.warning("Please enter a description.")
-            else:
-                if 'feedbacks' not in st.session_state['res']:
-                    st.session_state['res']['feedbacks'] = []
+            if feedback_text.strip():
                 new_feedback = {
                     "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                     "type": feedback_type,
                     "description": feedback_text
                 }
-                st.session_state['res']['feedbacks'].append(new_feedback)
-                st.success("Feedback recorded in memory! Please click 'Save Project' to update the shared folder.")
-        if st.session_state['res'].get('feedbacks'):
+                if 'feedbacks' not in st.session_state['project_data']:
+                    st.session_state['project_data']['feedbacks'] = []
+                st.session_state['project_data']['feedbacks'].append(new_feedback)
+                st.success("Feedback recorded! Refreshing...")
+                st.rerun()
+            feedbacks = st.session_state['project_data'].get('feedbacks', [])
+        if feedbacks:
             st.markdown("**Previous Feedback on this circuit:**")
-            for fb in st.session_state['res']['feedbacks']:
+            for fb in feedbacks:
                 st.caption(f"🕒 {fb['timestamp']} | **{fb['type']}**")
                 st.write(f"> {fb['description']}")
 
 # --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
+if 'project_data' not in st.session_state:
+    st.session_state['project_data'] = {
+        "img": None,
+        "netlist_text": "",
+        "analysis_request": "",
+        "res": None,
+        "advisor_res": None,
+        "opt_res": None,
+        "feedbacks": [] 
+    }
 st.title("CirAI:Electrical circuit Image or netlist to Interactive Math")
 
 if 'res' not in st.session_state:
     st.session_state['res'] = None
-if 'advisor_res' not in st.session_state:
-    st.session_state['advisor_res'] = None
 col_in, col_out = st.columns([1, 2])
 
 with col_in:
@@ -361,19 +353,21 @@ with col_in:
         try:
             file_content = uploaded_file.getvalue().decode("utf-8")
             loaded_data = json.loads(file_content)
-            img = loaded_data.get("img") or loaded_data.get("imag")
-            st.session_state['img'] = base64_to_image(img)
-            st.session_state['netlist_text'] = loaded_data.get("netlist_text", "")
+            img_data = loaded_data.get("img") or loaded_data.get("imag")
+            st.session_state['project_data']['img'] = base64_to_image(img_data)
+            st.session_state['project_data']['netlist_text'] = loaded_data.get("netlist_text", "")
             if loaded_data.get("res"):
-                st.session_state['res'] = loaded_data["res"]
+                st.session_state['project_data']['res'] = loaded_data["res"]
             else:
-                st.session_state['res'] = {
+                st.session_state['project_data']['res'] = {
                     "H_latex": loaded_data.get("formula", ""),
                     "H_latex_formula": loaded_data.get("formula", ""),
                     "params": loaded_data.get("params", []),
                     "topology": "Loaded Project (Legacy)"
                 } 
-            st.session_state['advisor_res'] = loaded_data.get("advisor_res")
+            st.session_state['project_data']['advisor_res'] = loaded_data.get("advisor_res")
+            st.session_state['project_data']['opt_res'] = loaded_data.get("opt_res")
+            st.session_state['project_data']['feedbacks'] = loaded_data.get("feedbacks", [])
             st.success("Project loaded successfully!")
         except Exception as e:
             st.error(f"Error loading project: {e}")
@@ -383,8 +377,8 @@ with col_in:
         ["🖼️ Upload / Paste", "✏️ Draw Circuit", "📝 Netlist"], 
         horizontal=True
     )
-    img = st.session_state.get('img', None)
-    netlist_content = st.session_state.get('netlist_text', None)
+    img = st.session_state['project_data'].get('img')
+    netlist_content = st.session_state['project_data'].get('netlist_text')
     if input_method == "🖼️ Upload / Paste":
         st.write("Upload or paste a circuit image:")
         uploaded_file = st.file_uploader("Upload circuit image", type=["png", "jpg", "jpeg"])
@@ -453,19 +447,15 @@ with col_in:
     st.markdown("---")
     derivation_steps_flag = 1 if derivation_steps == "Show derivation steps in markdown format" else 0
     if st.button("Analyze Circuit", use_container_width=True):
-        if not img and not netlist_content:
-            st.error("Please provide an image, draw a circuit, or input a netlist first.")
-        else:
-            with st.spinner("Analyzing the circuit..."):
-                st.session_state['res'] = analyze_circuit(img, netlist_content, analysis_request, derivation_steps_flag)
-                st.session_state['img'] = img
-    render_save_project_section(
-        img=st.session_state.get('img'),
-        netlist_content=st.session_state.get('netlist_text'),
-        analysis_request=st.session_state.get('analysis_request'),
-        res=st.session_state.get('res'),
-        advisor_res=st.session_state.get('advisor_res')
-    )
+            if not img and not netlist_content:
+                st.error("Please provide an image, draw a circuit, or input a netlist first.")
+            else:
+                with st.spinner("Analyzing the circuit..."):
+                    st.session_state['project_data']['analysis_request'] = analysis_request
+                    st.session_state['project_data']['img'] = img
+                    st.session_state['project_data']['netlist_text'] = netlist_content
+                    res = analyze_circuit(img, netlist_content, analysis_request, derivation_steps_flag)
+    render_save_project_section(st.session_state['project_data'])
     show_guidde_video()
 
 with col_out:
@@ -480,7 +470,8 @@ with col_out:
             "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \\pi x$.\n"
             "8. **Axis scaling:** To change the scale of the axes, press shift and point to a specific axis, X-axis or Y-axis. Then change the size using the mouse wheel."
             )
-    if st.session_state['res'] == None:
+    res = st.session_state['project_data'].get('res')
+    if not res:
         z_init = """H(s) = 1/(1+R_{e}C_{e}s)"""
         example_img = "LPF.jpg"
         st.image(example_img, caption="Example circuit analysis", width=350)
@@ -488,14 +479,15 @@ with col_out:
         C_e = {"name": "C_e", "value": "1p", "min": "1f", "max": "10p", "step": "0.1p"}
         calculator_html = generate_calculator_html(z_init, params=[R_e, C_e])
         st.components.v1.html(calculator_html, height=600)
-    elif st.session_state['res']:
-        res = st.session_state['res']
+    else:
+        res = st.session_state['project_data'].get('res')
         z_latex = res.get('H_latex', '0')
         H_latex_formula = res.get('H_latex_formula', '0')
         topology = res.get('topology', 'Unknown')
         params = assign_param_bounds(res.get('params', []))
-        if st.session_state.get('opt_res'):
-                    opt_dict = st.session_state['opt_res'].get("optimized_parameters", {})
+        opt_res = st.session_state['project_data'].get('opt_res')
+        if opt_res:
+                    opt_dict = opt_res.get("optimized_parameters", {})
                     for p in params:
                         raw_name = p['name'].replace('_', '').replace('{', '').replace('}', '')
                         new_val = None
@@ -581,31 +573,26 @@ with col_out:
                     st.error("please upload something")
                 else:
                     with st.spinner("Analyzing circuit use cases..."):
-                        st.session_state['advisor_res'] = electrical_advisor(img, topology, analysis_request, circuit_uses)
+                        st.session_state['project_data']['circuit_uses'] = circuit_uses 
+                        st.session_state['project_data']['advisor_res'] = electrical_advisor(img, topology, analysis_request, circuit_uses)
         with col_btn2:
-            if st.button("⚡ Optimize Parameters", use_container_width=True):
-                if not img:
-                    st.error("Please upload something")
-                else:
-                    with st.spinner("Calculating optimal parameters..."):
-                        # שולחים ל-LLM את רשימת הפרמטרים הנוכחית בפורמט קריא כדי שידע את הגבולות
-                        param_list_str = json.dumps(params, indent=2)
-                        opt_result = optimize_circuit(param_list_str, img, H_latex_formula, analysis_request, circuit_uses)
-                        
+                    if st.button("⚡ Optimize Parameters", use_container_width=True):
+                        # ...
+                        opt_result = optimize_circuit(...)
                         if opt_result:
-                            st.session_state['opt_res'] = opt_result
+                            st.session_state['project_data']['opt_res'] = opt_result
                             st.success("Optimization complete! Updating calculator...")
-                            st.rerun() # מרעננים כדי שהמחשבון למעלה ייטען מחדש עם הערכים החדשים!
+                            st.rerun()
         render_feedback_section()
-        if st.session_state.get('opt_res'):
-            opt = st.session_state['opt_res']
+        if st.session_state['project_data'].get('opt_res'):
+            opt = st.session_state['project_data']['opt_res']
             with st.expander("⚡ Optimization Results & Advice", expanded=True):
                 st.markdown("**New Optimized Parameters:**")
                 st.json(opt.get("optimized_parameters", {}))
                 st.markdown("**Advice / Reasoning:**")
                 st.write(opt.get("optimization_advice", "No advice provided."))
-        if st.session_state['advisor_res']:
-            adv = st.session_state['advisor_res']
+        if st.session_state['project_data'].get('advisor_res'):
+            adv = st.session_state['project_data']['advisor_res']
             with st.expander("AI Electrical Advisor - Detailed Recommendations and Derivation", expanded=True):
                 st.markdown("**Performance Advice:**")
                 st.markdown(adv.get('performance_advice', "Not found"))
@@ -617,8 +604,6 @@ with col_out:
                 st.markdown(adv.get('component_advice', "Not found"))
                 st.markdown("**Recommended Articles:**")
                 st.markdown(adv.get('Recommended_articles_links', "Not found"))
-    else:
-        st.info("Upload image or netlist to start")
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
 with st.sidebar:
@@ -656,8 +641,9 @@ with st.sidebar:
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 try:
-                    if 'img' in st.session_state and st.session_state['img'] is not None and len(st.session_state['chat_history']) == 0:
-                         response = chat.send_message([prompt, st.session_state['img']])
+                    img_for_chat = st.session_state['project_data'].get('img')
+                    if img_for_chat is not None and len(st.session_state['chat_history']) == 0:
+                        response = chat.send_message([prompt, img_for_chat])
                     else:
                          response = chat.send_message(prompt)
                     st.markdown(response.text)
