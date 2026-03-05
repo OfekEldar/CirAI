@@ -12,6 +12,7 @@ from video import show_guidde_video
 from io import BytesIO
 from PIL import Image
 from pathlib import Path
+import datetime
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 genai.configure(api_key=GOOGLE_API_KEY)
@@ -144,8 +145,6 @@ def analyze_circuit(image, netlist_text, analysis_request, derivation_steps_flag
 
 def optimize_circuit(bounded_param_list, image, formula, analysis_request, circuit_uses):
     model = genai.GenerativeModel('gemini-2.5-pro')
-    
-    # הוספנו f-string, הכפלנו סוגריים מסולסלים ל-JSON, והוספנו חוקים נוקשים לפורמט
     prompt = """
     You are an expert Analog IC Design Engineer.
     Input provided:
@@ -309,6 +308,41 @@ def render_save_project_section(img, netlist_content, analysis_request, res, adv
         mime="application/json",
         use_container_width=True
     )
+
+def render_feedback_section():
+    if not st.session_state.get('res'):
+        return
+    st.markdown("---")
+    with st.expander("🚩 Report an Issue / Team Feedback"):
+        st.info("Did the AI make a mistake? Document it here so the tool and the team can learn for next time.")
+        feedback_type = st.selectbox(
+            "Type of issue:", 
+            ["Incorrect Formula", "Wrong Component Value", "Bad Optimization Advice", "Topology Misclassification", "Other"],
+            key="feedback_type_input"
+        )
+        feedback_text = st.text_area(
+            "Describe the mistake and the correct approach:", 
+            height=100, 
+            key="feedback_text_input"
+        )
+        if st.button("Submit Feedback to Project", use_container_width=True):
+            if not feedback_text.strip():
+                st.warning("Please enter a description.")
+            else:
+                if 'feedbacks' not in st.session_state['res']:
+                    st.session_state['res']['feedbacks'] = []
+                new_feedback = {
+                    "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "type": feedback_type,
+                    "description": feedback_text
+                }
+                st.session_state['res']['feedbacks'].append(new_feedback)
+                st.success("Feedback recorded in memory! Please click 'Save Project' to update the shared folder.")
+        if st.session_state['res'].get('feedbacks'):
+            st.markdown("**Previous Feedback on this circuit:**")
+            for fb in st.session_state['res']['feedbacks']:
+                st.caption(f"🕒 {fb['timestamp']} | **{fb['type']}**")
+                st.write(f"> {fb['description']}")
 
 # --- GUI --- #
 st.set_page_config(page_title="Analog Design Pro", layout="wide")
@@ -562,6 +596,7 @@ with col_out:
                             st.session_state['opt_res'] = opt_result
                             st.success("Optimization complete! Updating calculator...")
                             st.rerun() # מרעננים כדי שהמחשבון למעלה ייטען מחדש עם הערכים החדשים!
+        render_feedback_section()
         if st.session_state.get('opt_res'):
             opt = st.session_state['opt_res']
             with st.expander("⚡ Optimization Results & Advice", expanded=True):
