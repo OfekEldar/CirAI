@@ -391,7 +391,7 @@ if 'project_data' not in st.session_state:
         "opt_res": None,
         "feedbacks": [] 
     }
-st.title("CirAI:Electrical circuit Image or netlist to Interactive Math")
+st.title("CirAI | AI Circuit Analysis & Analog IC Design Copilot")
 
 if 'res' not in st.session_state:
     st.session_state['res'] = None
