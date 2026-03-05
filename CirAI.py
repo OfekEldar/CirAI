@@ -375,7 +375,11 @@ def connection():
         st.divider()
 
 # --- GUI --- #
-st.set_page_config(page_title="Analog Design Pro", layout="wide")
+st.set_page_config(
+    page_title="CirAI | AI Circuit Analysis & Analog IC Design Copilot",
+    page_icon="⚡",
+    layout="wide"
+)
 connection()
 if 'project_data' not in st.session_state:
     st.session_state['project_data'] = {
