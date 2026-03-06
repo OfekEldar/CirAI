@@ -378,7 +378,7 @@ def connection():
 def render_interactive_desmos(html_content, key="desmos_main"):
     component_dir = "desmos_live_component"
     os.makedirs(component_dir, exist_ok=True)
-    with open(os.path.join(component_dir, "index.html"), "w", encoding="utf-8") as f:
+    with open(os.path.join(component_dir, "desmos_calculator.html"), "w", encoding="utf-8") as f:
         f.write(html_content)
     desmos_component = components.declare_component("desmos_live", path=component_dir)
     return desmos_component(key=key, default=None)
@@ -685,7 +685,7 @@ st.header("3. Interactive Desmos Calculator")
 live_data = render_interactive_desmos(calculator_html, key="desmos_circuit")
 if live_data:
     st.session_state['live_desmos_data'] = live_data
-    
+
 show_guidde_video()
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
