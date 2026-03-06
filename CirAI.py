@@ -687,7 +687,7 @@ if 'calculator_html' in locals():
     st.session_state['saved_calc_html'] = calculator_html
     col_btn, _ = st.columns([1, 5])
     with col_btn:
-        if st.button("🔲 פתח במסך מלא", use_container_width=True):
+        if st.button("Open fullscreen", use_container_width=True):
             st.session_state['fullscreen_desmos'] = True
             st.rerun()
     st.components.v1.html(calculator_html, height=600)
