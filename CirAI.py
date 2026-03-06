@@ -308,8 +308,8 @@ def render_save_project_section(project_data):
     st.subheader("💾 Save Project")
     st.write("📝 **Set Parameter Values Before Saving:**")
     params_list = res.get('params', [])
-    if 'manual_params' not in st.session_state:
-        st.session_state['manual_params'] = {}
+    if 'values' not in st.session_state['project_data']['res']:
+        st.session_state['project_data']['res']['values'] = {}
     if params_list:
         cols = st.columns(3)
         for i, param_name in enumerate(params_list):
@@ -319,7 +319,7 @@ def render_save_project_section(project_data):
                     key=f"manual_input_{param_name}",
                     placeholder="e.g., 10k, 5p"
                 )
-                st.session_state['manual_params'][param_name] = val
+                st.session_state['project_data']['res']['values'][param_name] = val
     else:
         st.info("No parameters detected for manual input.")
     default_topology_name = res.get('topology', 'circuit_project')
@@ -435,6 +435,10 @@ with col_in:
                 st.session_state['project_data']['circuit_uses'] = loaded_data.get("circuit_uses", "")
                 st.session_state['project_data']['advisor_res'] = loaded_data.get("advisor_res")
                 st.session_state['project_data']['opt_res'] = loaded_data.get("opt_res")
+                st.session_state['project_data']['res']['params'] = loaded_data.get("params", [])
+                st.session_state['project_data']['res']['H_latex'] = loaded_data.get("H_latex", "")
+                st.session_state['project_data']['res']['H_latex_formula'] = loaded_data.get("H_latex_formula", "")
+                st.session_state['project_data']['res']['topology'] = loaded_data.get("topology", "Loaded Project (Legacy)")
                 st.session_state['project_data']['feedbacks'] = loaded_data.get("feedbacks", [])
                 if loaded_data.get("res"):
                     st.session_state['project_data']['res'] = loaded_data["res"]
