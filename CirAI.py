@@ -322,9 +322,16 @@ def render_save_project_section(project_data):
                 st.session_state['manual_params'][param_name] = val
     else:
         st.info("No parameters detected for manual input.")
-    
-    topology_name = res.get('topology', 'circuit_project')
-    safe_filename = re.sub(r'[\\/*?:"<>|]', "", topology_name).replace(" ", "_") + ".json"
+    default_topology_name = res.get('topology', 'circuit_project')
+    default_safe_name = re.sub(r'[\\/*?:"<>|]', "", default_topology_name).replace(" ", "_")
+    custom_filename = st.text_input(
+        "📄 **Project Filename:**", 
+        value=default_safe_name,
+        help="Enter the name for your saved project file."
+    )
+    safe_filename = re.sub(r'[\\/*?:"<>|]', "", custom_filename).replace(" ", "_")
+    if not safe_filename.endswith('.json'):
+        safe_filename += '.json'
     json_export = create_project_export(project_data)
     st.info("💡 Tip: To save directly to your SharePoint folder, ensure your browser is set to 'Ask where to save each file before downloading'.")
     st.download_button(
