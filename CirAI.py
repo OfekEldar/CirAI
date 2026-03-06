@@ -690,7 +690,7 @@ if 'calculator_html' in locals():
         if st.button("Open fullscreen", use_container_width=True):
             st.session_state['fullscreen_desmos'] = True
             st.rerun()
-    st.components.v1.html(calculator_html, height=600)
+    st.components.v1.html(calculator_html, height=800)
 show_guidde_video()
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
