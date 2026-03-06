@@ -514,7 +514,6 @@ with col_in:
                     st.session_state['project_data']['netlist_text'] = netlist_content
                     res = analyze_circuit(img, netlist_content, analysis_request, derivation_steps_flag)
                     st.session_state['project_data']['res'] = res
-    show_guidde_video()
 
 with col_out:
     st.header("2. Circuit Analysis")
@@ -677,7 +676,7 @@ st.markdown("---")
 st.header("3. Interactive Desmos Calculator")
 if 'calculator_html' in locals():
     st.components.v1.html(calculator_html, height=800)
-
+show_guidde_video()
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
 with st.sidebar:
