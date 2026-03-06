@@ -324,7 +324,7 @@ def render_feedback_section(project_data):
         return
     st.markdown("---")
     feedbacks = project_data.get('feedbacks', [])
-    with st.expander("🚩 Report an Issue / Team Feedback", expanded=bool(feedbacks)):
+    with st.expander("🚩 Report an Issue / Team Feedback", expanded=False):
         with st.form(key="feedback_form", clear_on_submit=True):
             feedback_type = st.selectbox("Type of issue:", ["Incorrect Formula", "Wrong Component Value", "Other"])
             feedback_text = st.text_area("Describe the mistake:", height=100)
