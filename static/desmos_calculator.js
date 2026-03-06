@@ -137,7 +137,7 @@ class DesmosCalculatorManager {
                 
                 // Unit definitions
                 this.addUnitDefinitions();
-                this.setupStreamlitSync();
+                
                 console.log('All expressions added successfully!');
                 this.isFullyReady = true;
                 window.calculatorFullyReady = true;
@@ -216,9 +216,9 @@ class DesmosCalculatorManager {
                 console.error(`Unit ${index + 1} failed:`, e);
             }
         });
-        let state = this.calculator.getState();
+        let state = calculator.getState();
         state.expressions.list = state.expressions.list.concat(UNIT_DEFINITIONS);
-        this.calculator.setState(state);
+        calculator.setState(state);
     }
 
 
@@ -229,83 +229,14 @@ class DesmosCalculatorManager {
             calculator: this.calculator
         };
     }
-    // ==========================================
-    // === תוספות חדשות לתקשורת עם Streamlit ===
-    // ==========================================
-    
-    setupStreamlitSync() {
-        if (typeof Streamlit === 'undefined') {
-            console.warn('Streamlit library not found. Data will not sync back to Python.');
-            return;
-        }
-
-        // האזנה לשינויים ב-Desmos (למשל גרירת סליידר)
-        let debounceTimer;
-        this.calculator.observeEvent('change', () => {
-            clearTimeout(debounceTimer);
-            // ממתין חצי שנייה אחרי שהמשתמש מפסיק לגרור כדי לא להקריס את המערכת
-            debounceTimer = setTimeout(() => {
-                this.sendStateToPython();
-            }, 500);
-        });
-
-        // דיווח ל-Streamlit שהרכיב מוכן
-        Streamlit.setFrameHeight(800);
-        Streamlit.setComponentReady();
-        
-        // שליחה ראשונית של הנתונים
-        this.sendStateToPython();
-    }
-
-    sendStateToPython() {
-        if (!this.calculator || typeof Streamlit === 'undefined') return;
-        
-        const exps = this.calculator.getState().expressions.list;
-        let currentData = { formula: "", params: {} };
-        
-        exps.forEach(exp => {
-            if (exp.latex) {
-                // זיהוי פרמטרים בתוך תיקיית הפרמטרים
-                if (exp.folderId === 'params' && exp.latex.includes('=')) {
-                    let parts = exp.latex.split('=');
-                    if (parts.length === 2) {
-                        currentData.params[parts[0].trim()] = parts[1].trim();
-                    }
-                } 
-                // זיהוי הנוסחה הראשית
-                else if (exp.id === 'Z') {
-                    currentData.formula = exp.latex;
-                }
-            }
-        });
-        
-        // שליחת המילון (JSON) חזרה ל-Python
-        Streamlit.setComponentValue(currentData);
-    }
 }
 
 function initializeCalculator(zLatex, params=[]) {
     const manager = new DesmosCalculatorManager('calculator', zLatex, params);
     manager.init();
     return manager;
+
 }
 
-let calcManager = null;
-function onDataFromPython(event) {
-    const data = event.detail.args;
-    if (!calcManager && data) {
-        calcManager = new DesmosCalculatorManager('calculator', data.z_latex, data.params);
-        calcManager.init();
-    }
-}
 
-function windowLoaded() {
-    if (typeof Streamlit !== 'undefined') {
-        Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, onDataFromPython);
-    } else {
-        initializeCalculator('H(s)=1/(1+sRC)', []);
-    }
-}
-
-window.addEventListener("load", windowLoaded);
 
