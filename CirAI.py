@@ -590,7 +590,7 @@ with col_out:
             if 'R' in detected_params:
                 st.markdown("**Resistor (Thermal Noise):**")
                 st.latex(r"\overline{V_n^2} = 4k_B T R \cdot \Delta f")
-        calculator_html = generate_calculator_html([st.session_state['project_data']['res']['H_latex']], params)
+        calculator_html = generate_calculator_html(st.session_state['project_data']['res'].get('H_latex_formula', '0'), params)
         st.components.v1.html(calculator_html, height=600)
         st.markdown("---")
         st.markdown(
