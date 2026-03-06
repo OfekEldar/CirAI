@@ -1,4 +1,5 @@
 import streamlit as st
+import streamlit.components.v1 as components
 import google.generativeai as genai
 from PIL import Image
 from streamlit_paste_button import paste_image_button
@@ -374,6 +375,14 @@ def connection():
             st.rerun()
         st.divider()
 
+def render_interactive_desmos(html_content, key="desmos_main"):
+    component_dir = "desmos_live_component"
+    os.makedirs(component_dir, exist_ok=True)
+    with open(os.path.join(component_dir, "index.html"), "w", encoding="utf-8") as f:
+        f.write(html_content)
+    desmos_component = components.declare_component("desmos_live", path=component_dir)
+    return desmos_component(key=key, default=None)
+
 # --- GUI --- #
 st.set_page_config(
     page_title="CirAI | AI Circuit Analysis & Analog IC Design Copilot",
@@ -392,16 +401,6 @@ if 'project_data' not in st.session_state:
         "feedbacks": [] 
     }
 st.title("CirAI | AI Circuit Analysis & Analog IC Design Copilot")
-# --- Full Screen Interceptor ---
-if 'fullscreen_desmos' not in st.session_state:
-    st.session_state['fullscreen_desmos'] = False
-if st.session_state.get('fullscreen_desmos', False):
-    if st.button("(Exit Full Screen)"):
-        st.session_state['fullscreen_desmos'] = False
-        st.rerun()
-    if 'saved_calc_html' in st.session_state:
-        st.components.v1.html(st.session_state['saved_calc_html'], height=1200) 
-    st.stop()
 if 'res' not in st.session_state:
     st.session_state['res'] = None
 col_in, col_out = st.columns([1, 2])
@@ -683,14 +682,10 @@ with col_out:
 
 st.markdown("---")
 st.header("3. Interactive Desmos Calculator")
-if 'calculator_html' in locals():
-    st.session_state['saved_calc_html'] = calculator_html
-    col_btn, _ = st.columns([1, 5])
-    with col_btn:
-        if st.button("Open fullscreen", use_container_width=True):
-            st.session_state['fullscreen_desmos'] = True
-            st.rerun()
-    st.components.v1.html(calculator_html, height=800)
+live_data = render_interactive_desmos(calculator_html, key="desmos_circuit")
+if live_data:
+    st.session_state['live_desmos_data'] = live_data
+    
 show_guidde_video()
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []

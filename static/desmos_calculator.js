@@ -229,6 +229,74 @@ class DesmosCalculatorManager {
             calculator: this.calculator
         };
     }
+    // ==========================================
+    // === תוספות חדשות לתקשורת עם Streamlit ===
+    // ==========================================
+    
+    setupStreamlitSync() {
+        if (typeof Streamlit === 'undefined') {
+            console.warn('Streamlit library not found. Data will not sync back to Python.');
+            return;
+        }
+
+        // האזנה לשינויים ב-Desmos (למשל גרירת סליידר)
+        let debounceTimer;
+        this.calculator.observeEvent('change', () => {
+            clearTimeout(debounceTimer);
+            // ממתין חצי שנייה אחרי שהמשתמש מפסיק לגרור כדי לא להקריס את המערכת
+            debounceTimer = setTimeout(() => {
+                this.sendStateToPython();
+            }, 500);
+        });
+
+        // דיווח ל-Streamlit שהרכיב מוכן
+        Streamlit.setFrameHeight(800);
+        Streamlit.setComponentReady();
+        
+        // שליחה ראשונית של הנתונים
+        this.sendStateToPython();
+    }
+
+    sendStateToPython() {
+        if (!this.calculator || typeof Streamlit === 'undefined') return;
+        
+        const exps = this.calculator.getState().expressions.list;
+        let currentData = { formula: "", params: {} };
+        
+        exps.forEach(exp => {
+            if (exp.latex) {
+                // זיהוי פרמטרים בתוך תיקיית הפרמטרים
+                if (exp.folderId === 'params' && exp.latex.includes('=')) {
+                    let parts = exp.latex.split('=');
+                    if (parts.length === 2) {
+                        currentData.params[parts[0].trim()] = parts[1].trim();
+                    }
+                } 
+                // זיהוי הנוסחה הראשית
+                else if (exp.id === 'Z') {
+                    currentData.formula = exp.latex;
+                }
+            }
+        });
+        
+        // שליחת המילון (JSON) חזרה ל-Python
+        Streamlit.setComponentValue(currentData);
+    }
+}
+
+function windowLoaded() {
+    if (typeof Streamlit !== 'undefined') {
+        Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, onDataFromPython);
+    }
+}
+window.addEventListener("load", windowLoaded);
+
+let calcManager = null;
+function onDataFromPython(event) {
+    if (!calcManager) {
+        // מניח שהעברת את ה-HTML דרך פייתון עם המשתנים כבר מושתלים
+        // אם לא, אפשר לקרוא אותם מ- event.data.args
+    }
 }
 
 function initializeCalculator(zLatex, params=[]) {
