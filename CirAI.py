@@ -680,7 +680,7 @@ with col_out:
 
 st.markdown("---")
 st.header("3. Interactive Desmos Calculator")
-st.components.v1.html("desmos_calculator.html", height=900)
+st.components.v1.html(calculator_html, height=900)
 show_guidde_video()
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
