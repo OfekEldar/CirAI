@@ -35,7 +35,13 @@ derivation_steps_flag = 0
 img, topology, analysis_request, circuit_uses = None, None, None, None
 performance_advice, power_advice, noise_advice, component_advice, Recommended_articles_links = None, None, None, None, None
 model = genai.GenerativeModel('gemini-2.5-pro')
-
+COMPONENT_DIR = os.path.abspath("desmos_live_component")
+os.makedirs(COMPONENT_DIR, exist_ok=True)
+index_path = os.path.join(COMPONENT_DIR, "desmos_calculator.html")
+if not os.path.exists(index_path):
+    with open(index_path, "w", encoding="utf-8") as f:
+        f.write("<html><body>Initializing Desmos...</body></html>")
+desmos_component = components.declare_component("desmos_live", path=COMPONENT_DIR)
 
 def load_static_file(filename):
     """Load content from static file"""
@@ -292,6 +298,13 @@ def base64_to_image(base64_str):
 
 def create_project_export(project_data):
     export_dict = project_data.copy()
+    if 'live_desmos_data' in st.session_state and st.session_state['live_desmos_data']:
+        live_data = st.session_state['live_desmos_data']
+        if export_dict.get('res'):
+            if live_data.get('formula'):
+                export_dict['res']['H_latex'] = live_data['formula']
+            if live_data.get('params'):
+                export_dict['res']['live_params_values'] = live_data['params']
     export_dict["img"] = image_to_base64(project_data.get("img"))
     if 'user_info' in st.session_state:
         export_dict["author_name"] = st.session_state['user_info'].get('name', 'Unknown')
@@ -376,11 +389,8 @@ def connection():
         st.divider()
 
 def render_interactive_desmos(html_content, key="desmos_main"):
-    component_dir = "desmos_live_component"
-    os.makedirs(component_dir, exist_ok=True)
-    with open(os.path.join(component_dir, "desmos_calculator.html"), "w", encoding="utf-8") as f:
+    with open(index_path, "w", encoding="utf-8") as f:
         f.write(html_content)
-    desmos_component = components.declare_component("desmos_live", path=component_dir)
     return desmos_component(key=key, default=None)
 
 # --- GUI --- #
