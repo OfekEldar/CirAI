@@ -534,7 +534,7 @@ with col_out:
         R_e = {"name": "R_e", "value": "100", "min": "1", "max": "1000", "step": "10"}
         C_e = {"name": "C_e", "value": "1p", "min": "1f", "max": "10p", "step": "0.1p"}
         calculator_html = generate_calculator_html(z_init, params=[R_e, C_e])
-        #st.components.v1.html(calculator_html, height=600)
+        st.components.v1.html(calculator_html, height=600)
     else:
         res = st.session_state['project_data'].get('res')
         z_latex = res.get('H_latex', '0')
