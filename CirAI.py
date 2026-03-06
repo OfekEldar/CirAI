@@ -306,6 +306,23 @@ def render_save_project_section(project_data):
         return 
     st.markdown("---")
     st.subheader("💾 Save Project")
+    st.write("📝 **Set Parameter Values Before Saving:**")
+    params_list = res.get('params', [])
+    if 'manual_params' not in st.session_state:
+        st.session_state['manual_params'] = {}
+    if params_list:
+        cols = st.columns(3)
+        for i, param_name in enumerate(params_list):
+            with cols[i % 3]:
+                val = st.text_input(
+                    label=f"{param_name} Value:", 
+                    key=f"manual_input_{param_name}",
+                    placeholder="e.g., 10k, 5p"
+                )
+                st.session_state['manual_params'][param_name] = val
+    else:
+        st.info("No parameters detected for manual input.")
+    
     topology_name = res.get('topology', 'circuit_project')
     safe_filename = re.sub(r'[\\/*?:"<>|]', "", topology_name).replace(" ", "_") + ".json"
     json_export = create_project_export(project_data)
