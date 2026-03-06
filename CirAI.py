@@ -595,7 +595,13 @@ with col_out:
         z_latex = res.get('H_latex', '0')
         H_latex_formula = res.get('H_latex_formula', '0')
         topology = res.get('topology', 'Unknown')
-        params = assign_param_bounds(res.get('params', []))
+        original_params = res.get('params', [])
+        params = assign_param_bounds(original_params)
+        saved_params = res.get('live_params_values', {})
+        if saved_params:
+            for i, original_name in enumerate(original_params):
+                if original_name in saved_params and str(saved_params[original_name]).strip() != "":
+                    params[i]['value'] = str(saved_params[original_name]).strip()
         opt_res = st.session_state['project_data'].get('opt_res')
         if opt_res:
                     opt_dict = opt_res.get("optimized_parameters", {})
