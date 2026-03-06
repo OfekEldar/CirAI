@@ -400,7 +400,7 @@ if st.session_state.get('fullscreen_desmos', False):
         st.session_state['fullscreen_desmos'] = False
         st.rerun()
     if 'saved_calc_html' in st.session_state:
-        st.components.v1.html(st.session_state['saved_calc_html'], height=950) 
+        st.components.v1.html(st.session_state['saved_calc_html'], height=1200) 
     st.stop()
 if 'res' not in st.session_state:
     st.session_state['res'] = None
