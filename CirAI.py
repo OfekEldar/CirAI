@@ -355,7 +355,7 @@ def render_save_project_section(project_data):
     st.download_button(
         label=f"Download {safe_filename}",
         data=json_export,
-        file_name=custom_filename,
+        file_name=safe_filename,
         mime="application/json",
         use_container_width=True
     )
