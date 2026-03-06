@@ -308,8 +308,6 @@ def render_save_project_section(project_data):
     st.subheader("💾 Save Project")
     st.write("📝 **Set Parameter Values Before Saving:**")
     params_list = res.get('params', [])
-    if 'values' not in st.session_state['project_data']['res']:
-        st.session_state['project_data']['res']['values'] = {}
     if params_list:
         cols = st.columns(3)
         for i, param_name in enumerate(params_list):
@@ -319,7 +317,7 @@ def render_save_project_section(project_data):
                     key=f"manual_input_{param_name}",
                     placeholder="e.g., 10k, 5p"
                 )
-                st.session_state['project_data']['res']['values'][param_name] = val
+                st.session_state['project_data']['res']['params'].append(val)
     else:
         st.info("No parameters detected for manual input.")
     default_topology_name = res.get('topology', 'circuit_project')
