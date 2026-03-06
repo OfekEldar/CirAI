@@ -317,7 +317,7 @@ def render_save_project_section(project_data):
                     key=f"manual_input_{param_name}",
                     placeholder="e.g., 10k, 5p"
                 )
-                st.session_state['project_data']['res']['params'].append(val)
+                st.session_state['project_data']['res']['params'][param_name].append(val)
     else:
         st.info("No parameters detected for manual input.")
     default_topology_name = res.get('topology', 'circuit_project')
