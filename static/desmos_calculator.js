@@ -137,7 +137,7 @@ class DesmosCalculatorManager {
                 
                 // Unit definitions
                 this.addUnitDefinitions();
-                
+                this.setupStreamlitSync();
                 console.log('All expressions added successfully!');
                 this.isFullyReady = true;
                 window.calculatorFullyReady = true;
@@ -216,9 +216,9 @@ class DesmosCalculatorManager {
                 console.error(`Unit ${index + 1} failed:`, e);
             }
         });
-        let state = calculator.getState();
+        let state = this.calculator.getState();
         state.expressions.list = state.expressions.list.concat(UNIT_DEFINITIONS);
-        calculator.setState(state);
+        this.calculator.setState(state);
     }
 
 
@@ -284,27 +284,28 @@ class DesmosCalculatorManager {
     }
 }
 
-function windowLoaded() {
-    if (typeof Streamlit !== 'undefined') {
-        Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, onDataFromPython);
-    }
-}
-window.addEventListener("load", windowLoaded);
-
-let calcManager = null;
-function onDataFromPython(event) {
-    if (!calcManager) {
-        // מניח שהעברת את ה-HTML דרך פייתון עם המשתנים כבר מושתלים
-        // אם לא, אפשר לקרוא אותם מ- event.data.args
-    }
-}
-
 function initializeCalculator(zLatex, params=[]) {
     const manager = new DesmosCalculatorManager('calculator', zLatex, params);
     manager.init();
     return manager;
-
 }
 
+let calcManager = null;
+function onDataFromPython(event) {
+    const data = event.detail.args;
+    if (!calcManager && data) {
+        calcManager = new DesmosCalculatorManager('calculator', data.z_latex, data.params);
+        calcManager.init();
+    }
+}
 
+function windowLoaded() {
+    if (typeof Streamlit !== 'undefined') {
+        Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, onDataFromPython);
+    } else {
+        initializeCalculator('H(s)=1/(1+sRC)', []);
+    }
+}
+
+window.addEventListener("load", windowLoaded);
 
