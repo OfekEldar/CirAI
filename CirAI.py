@@ -432,38 +432,47 @@ with col_in:
     st.header("1. Input (Image or Netlist)")
     uploaded_file = st.file_uploader("Upload project file", type=["json"])
     if uploaded_file is not None:
-        file_content = uploaded_file.getvalue().decode("utf-8")
-        if st.session_state.get('last_uploaded_file_content') != file_content:
-            try:
-                loaded_data = json.loads(file_content)
-                img_data = loaded_data.get("img") or loaded_data.get("imag")
-                st.session_state['project_data']['img'] = base64_to_image(img_data)
-                st.session_state['project_data']['netlist_text'] = loaded_data.get("netlist_text", "")
-                st.session_state['project_data']['analysis_request'] = loaded_data.get("analysis_request", "")
-                st.session_state['project_data']['circuit_uses'] = loaded_data.get("circuit_uses", "")
-                st.session_state['project_data']['advisor_res'] = loaded_data.get("advisor_res")
-                st.session_state['project_data']['opt_res'] = loaded_data.get("opt_res")
-                st.session_state['project_data']['res']['params'] = loaded_data.get("params", [])
-                st.session_state['project_data']['res']['H_latex'] = loaded_data.get("H_latex", "")
-                st.session_state['project_data']['res']['H_latex_formula'] = loaded_data.get("H_latex_formula", "")
-                st.session_state['project_data']['res']['topology'] = loaded_data.get("topology", "Loaded Project (Legacy)")
-                st.session_state['project_data']['feedbacks'] = loaded_data.get("feedbacks", [])
-                if loaded_data.get("res"):
-                    st.session_state['project_data']['res'] = loaded_data["res"]
-                else:
-                    st.session_state['project_data']['res'] = {
-                        "H_latex": loaded_data.get("formula", ""),
-                        "H_latex_formula": loaded_data.get("formula", ""),
-                        "params": loaded_data.get("params", []),
-                        "topology": "Loaded Project (Legacy)"
-                    } 
-                st.session_state['project_data']['advisor_res'] = loaded_data.get("advisor_res")
-                st.session_state['project_data']['opt_res'] = loaded_data.get("opt_res")
-                st.session_state['project_data']['feedbacks'] = loaded_data.get("feedbacks", [])
-                st.session_state['last_uploaded_file_content'] = file_content
-                st.success("Project loaded successfully!")
-            except Exception as e:
-                st.error(f"Error loading project: {e}")
+            file_content = uploaded_file.getvalue().decode("utf-8")
+            if st.session_state.get('last_uploaded_file_content') != file_content:
+                try:
+                    loaded_data = json.loads(file_content)
+                    
+                    # 1. פענוח התמונה
+                    img_data = loaded_data.get("img") or loaded_data.get("imag")
+                    img_obj = base64_to_image(img_data)
+                    
+                    # 2. בניית אובייקט ה-res (תמיכה בפורמט חדש וישן)
+                    if loaded_data.get("res"):
+                        res_data = loaded_data["res"]
+                    else:
+                        res_data = {
+                            "H_latex": loaded_data.get("H_latex") or loaded_data.get("formula", ""),
+                            "H_latex_formula": loaded_data.get("H_latex_formula") or loaded_data.get("formula", ""),
+                            "params": loaded_data.get("params", []),
+                            "topology": loaded_data.get("topology", "Loaded Project (Legacy)")
+                        }
+                    
+                    # 3. עדכון כל הנתונים בפעולה אחת נקייה (Update)
+                    st.session_state['project_data'].update({
+                        'img': img_obj,
+                        'netlist_text': loaded_data.get("netlist_text", ""),
+                        'analysis_request': loaded_data.get("analysis_request", ""),
+                        'circuit_uses': loaded_data.get("circuit_uses", ""),
+                        'advisor_res': loaded_data.get("advisor_res"),
+                        'opt_res': loaded_data.get("opt_res"),
+                        'feedbacks': loaded_data.get("feedbacks", []),
+                        'res': res_data
+                    })
+                    
+                    # 4. שחזור הפרמטרים הידניים שהמשתמש שמר בפרויקט
+                    if 'live_params_values' in res_data:
+                        st.session_state['manual_params'] = res_data['live_params_values']
+                    
+                    st.session_state['last_uploaded_file_content'] = file_content
+                    st.success("Project loaded successfully!")
+                    
+                except Exception as e:
+                    st.error(f"Error loading project: {e}")
     analysis_request = st.text_input("Function to analyze (for example: Vout/Vin, Z(Vout) etc.):", value="Vout")
     input_method = st.radio(
         "Select Input Method:", 
