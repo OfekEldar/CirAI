@@ -66,7 +66,7 @@ def generate_calculator_html(z_latex, params=[]):
     # Replace template placeholders using string replacement (safer than .format())
     html_content = html_template.replace('{css_base64}', css_base64)
     html_content = html_content.replace('{calculator_js}', js_content)
-    html_content = html_content.replace('{z_latex}', json.dumps(z_latex))
+    html_content = html_content.replace('{z_latex}', json.loads(z_latex))
     html_content = html_content.replace('{params}', json.dumps(params))
     
     return html_content
@@ -590,7 +590,7 @@ with col_out:
             if 'R' in detected_params:
                 st.markdown("**Resistor (Thermal Noise):**")
                 st.latex(r"\overline{V_n^2} = 4k_B T R \cdot \Delta f")
-        calculator_html = generate_calculator_html(z_latex, params)
+        calculator_html = generate_calculator_html(st.session_state['project_data']['res']['H_latex'], params)
         st.components.v1.html(calculator_html, height=600)
         st.markdown("---")
         st.markdown(
