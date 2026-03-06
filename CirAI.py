@@ -36,6 +36,11 @@ img, topology, analysis_request, circuit_uses = None, None, None, None
 performance_advice, power_advice, noise_advice, component_advice, Recommended_articles_links = None, None, None, None, None
 model = genai.GenerativeModel('gemini-2.5-pro')
 
+desmos_calculator = components.declare_component(
+    "desmos_calculator",
+    path="desmos_component" 
+)
+
 def load_static_file(filename):
     """Load content from static file"""
     file_path = os.path.join('static', filename)
@@ -680,7 +685,14 @@ with col_out:
 
 st.markdown("---")
 st.header("3. Interactive Desmos Calculator")
-st.components.v1.html(calculator_html ,height=600)
+#st.components.v1.html(calculator_html ,height=600)
+live_data = desmos_calculator(
+            z_latex=z_latex, 
+            params=params, 
+            key="desmos_interactive" 
+        )
+if live_data:
+    st.session_state['live_desmos_data'] = live_data
 show_guidde_video()
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
