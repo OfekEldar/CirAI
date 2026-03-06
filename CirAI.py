@@ -291,6 +291,15 @@ def base64_to_image(base64_str):
 
 def create_project_export(project_data):
     export_dict = project_data.copy()
+    if export_dict.get('res'):
+        export_dict['res'] = project_data['res'].copy()
+        params_list = export_dict['res'].get('params', [])
+        live_params = {}
+        for p in params_list:
+            widget_key = f"manual_input_{p}"
+            val = st.session_state.get(widget_key, "").strip()
+            live_params[p] = val   
+        export_dict['res']['live_params_values'] = live_params
     export_dict["img"] = image_to_base64(project_data.get("img"))
     if 'user_info' in st.session_state:
         export_dict["author_name"] = st.session_state['user_info'].get('name', 'Unknown')
@@ -350,6 +359,7 @@ def render_save_project_section(project_data):
         mime="application/json",
         use_container_width=True
     )
+
 def render_feedback_section(project_data):
     if not project_data.get('res'):
         st.info("Analyze a circuit first to enable feedback and improvement suggestions.")
