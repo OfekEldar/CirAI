@@ -36,16 +36,6 @@ img, topology, analysis_request, circuit_uses = None, None, None, None
 performance_advice, power_advice, noise_advice, component_advice, Recommended_articles_links = None, None, None, None, None
 model = genai.GenerativeModel('gemini-2.5-pro')
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-COMPONENT_DIR = os.path.join(current_dir, "desmos_live_component")
-os.makedirs(COMPONENT_DIR, exist_ok=True)
-index_path = os.path.join(COMPONENT_DIR, "index.html")
-if not os.path.exists(index_path):
-    with open(index_path, "w", encoding="utf-8") as f:
-        f.write("<html><body>Initializing Desmos...</body></html>")
-desmos_component = components.declare_component("desmos_live", path=COMPONENT_DIR)
-
-
 def load_static_file(filename):
     """Load content from static file"""
     file_path = os.path.join('static', filename)
@@ -391,17 +381,6 @@ def connection():
             st.rerun()
         st.divider()
 
-def render_interactive_desmos(html_content, key="desmos_main"):
-    if os.path.exists(index_path):
-        with open(index_path, "r", encoding="utf-8") as f:
-            current_content = f.read()
-        if current_content == html_content:
-            return desmos_component(key=key, default=None)
-    with open(index_path, "w", encoding="utf-8") as f:
-        f.write(html_content)
-        
-    return desmos_component(key=key, default=None)
-
 # --- GUI --- #
 st.set_page_config(
     page_title="CirAI | AI Circuit Analysis & Analog IC Design Copilot",
@@ -701,11 +680,7 @@ with col_out:
 
 st.markdown("---")
 st.header("3. Interactive Desmos Calculator")
-unique_key = f"desmos_circuit_{res.get('topology', 'default') if res else 'default'}"
-live_data = render_interactive_desmos(calculator_html, key=unique_key)
-if live_data:
-    st.session_state['live_desmos_data'] = live_data
-
+st.components.v1.html("default_calculator.html", height=900)
 show_guidde_video()
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
