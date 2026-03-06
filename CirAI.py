@@ -392,8 +392,14 @@ def connection():
         st.divider()
 
 def render_interactive_desmos(html_content, key="desmos_main"):
+    if os.path.exists(index_path):
+        with open(index_path, "r", encoding="utf-8") as f:
+            current_content = f.read()
+        if current_content == html_content:
+            return desmos_component(key=key, default=None)
     with open(index_path, "w", encoding="utf-8") as f:
         f.write(html_content)
+        
     return desmos_component(key=key, default=None)
 
 # --- GUI --- #
