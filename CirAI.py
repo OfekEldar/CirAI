@@ -598,7 +598,7 @@ with col_out:
                 st.markdown("**Resistor (Thermal Noise):**")
                 st.latex(r"\overline{V_n^2} = 4k_B T R \cdot \Delta f")
         calculator_html = generate_calculator_html(z_latex, params)
-        #st.components.v1.html(calculator_html, height=600)
+        st.components.v1.html(calculator_html, height=600)
         st.markdown("---")
         st.markdown(
             """
