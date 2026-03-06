@@ -316,7 +316,7 @@ def render_save_project_section(project_data):
             with cols[i % 3]:
                 val = st.text_input(
                     label=f"{param_name} Value:", 
-                    key=f"manual_input_{param_name}",
+                    key= f"{param_name}",
                     placeholder="e.g., 10k, 5p"
                 )
                 st.session_state['project_data']['res']['params'][param_name] = (val)
