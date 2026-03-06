@@ -307,23 +307,32 @@ def render_save_project_section(project_data):
     st.markdown("---")
     st.subheader("💾 Save Project")
     st.write("📝 **Set Parameter Values Before Saving:**")
-    params_list = res.get('params', [])
-    if 'live_params_values' not in res:
+    raw_params = res.get('params', [])
+    if isinstance(raw_params, str): 
+        raw_params = [raw_params]
+    params_list = []
+    for p in raw_params:
+        p_str = str(p).strip()
+        if p_str and p_str not in params_list:
+            params_list.append(p_str)
+    if 'live_params_values' not in res or res['live_params_values'] is None:
         st.session_state['project_data']['res']['live_params_values'] = {}
     if params_list:
         cols = st.columns(3)
         for i, param_name in enumerate(params_list):
             with cols[i % 3]:
+                existing_val = res.get('live_params_values', {}).get(param_name, "")
                 val = st.text_input(
                     label=f"{param_name} Value:", 
-                    key= f"{param_name}",
+                    value=existing_val,
+                    key=f"manual_input_{param_name}",
                     placeholder="e.g., 10k, 5p"
                 )
-                st.session_state['project_data']['res']['params'][param_name] = (val)
+                st.session_state['project_data']['res']['live_params_values'][param_name] = val
     else:
         st.info("No parameters detected for manual input.")
     default_topology_name = res.get('topology', 'circuit_project')
-    default_safe_name = re.sub(r'[\\/*?:"<>|]', "", default_topology_name).replace(" ", "_")
+    default_safe_name = re.sub(r'[\\/*?:"<>|]', "", str(default_topology_name)).replace(" ", "_")
     custom_filename = st.text_input(
         "📄 **Project Filename:**", 
         value=default_safe_name,
@@ -337,11 +346,10 @@ def render_save_project_section(project_data):
     st.download_button(
         label=f"Download {safe_filename}",
         data=json_export,
-        file_name=custom_filename,
+        file_name=safe_filename,
         mime="application/json",
         use_container_width=True
     )
-
 def render_feedback_section(project_data):
     if not project_data.get('res'):
         st.info("Analyze a circuit first to enable feedback and improvement suggestions.")
