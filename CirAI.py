@@ -311,17 +311,15 @@ def render_save_project_section(project_data):
     if 'live_params_values' not in res:
         st.session_state['project_data']['res']['live_params_values'] = {}
     if params_list:
-            cols = st.columns(3)
-            for i, param_name in enumerate(params_list):
-                with cols[i % 3]:
-                    existing_val = res.get('live_params_values', {}).get(param_name, "")
-                    val = st.text_input(
-                        label=f"{param_name} Value:", 
-                        value=existing_val,
-                        key=f"manual_input_{param_name}",
-                        placeholder="e.g., 10k, 5p"
-                    )
-                    st.session_state['project_data']['res']['live_params_values'][param_name] = val
+        cols = st.columns(3)
+        for i, param_name in enumerate(params_list):
+            with cols[i % 3]:
+                val = st.text_input(
+                    label=f"{param_name} Value:", 
+                    key=f"manual_input_{param_name}",
+                    placeholder="e.g., 10k, 5p"
+                )
+                st.session_state['project_data']['res']['params'][param_name] = (val)
     else:
         st.info("No parameters detected for manual input.")
     default_topology_name = res.get('topology', 'circuit_project')
