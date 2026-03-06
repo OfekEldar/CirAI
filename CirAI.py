@@ -392,7 +392,16 @@ if 'project_data' not in st.session_state:
         "feedbacks": [] 
     }
 st.title("CirAI | AI Circuit Analysis & Analog IC Design Copilot")
-
+# --- Full Screen Interceptor ---
+if 'fullscreen_desmos' not in st.session_state:
+    st.session_state['fullscreen_desmos'] = False
+if st.session_state.get('fullscreen_desmos', False):
+    if st.button("(Exit Full Screen)"):
+        st.session_state['fullscreen_desmos'] = False
+        st.rerun()
+    if 'saved_calc_html' in st.session_state:
+        st.components.v1.html(st.session_state['saved_calc_html'], height=950) 
+    st.stop()
 if 'res' not in st.session_state:
     st.session_state['res'] = None
 col_in, col_out = st.columns([1, 2])
@@ -675,7 +684,13 @@ with col_out:
 st.markdown("---")
 st.header("3. Interactive Desmos Calculator")
 if 'calculator_html' in locals():
-    st.components.v1.html(calculator_html, height=800)
+    st.session_state['saved_calc_html'] = calculator_html
+    col_btn, _ = st.columns([1, 5])
+    with col_btn:
+        if st.button("🔲 פתח במסך מלא", use_container_width=True):
+            st.session_state['fullscreen_desmos'] = True
+            st.rerun()
+    st.components.v1.html(calculator_html, height=600)
 show_guidde_video()
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
