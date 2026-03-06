@@ -590,7 +590,7 @@ with col_out:
             if 'R' in detected_params:
                 st.markdown("**Resistor (Thermal Noise):**")
                 st.latex(r"\overline{V_n^2} = 4k_B T R \cdot \Delta f")
-        calculator_html = generate_calculator_html(st.session_state['project_data']['res']['H_latex'], params)
+        calculator_html = generate_calculator_html([st.session_state['project_data']['res']['H_latex']], params)
         st.components.v1.html(calculator_html, height=600)
         st.markdown("---")
         st.markdown(
@@ -648,7 +648,9 @@ with col_out:
                             debug_dict[key] = "🖼️ [Image Object]" if value is not None else None
                         else:
                             debug_dict[key] = value
+                            z_latex = value
                     st.json(debug_dict)
+                    st.json(z_latex)
         if st.session_state['project_data'].get('opt_res'):
             opt = st.session_state['project_data']['opt_res']
             with st.expander("⚡ Optimization Results & Advice", expanded=True):
