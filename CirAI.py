@@ -64,9 +64,10 @@ def generate_calculator_html(z_latex, params=[]):
     css_base64 = encode_css_base64(css_content)
     
     # Replace template placeholders using string replacement (safer than .format())
+    formula = {st.session_state['project_data']['res']['H_latex_formula']}
     html_content = html_template.replace('{css_base64}', css_base64)
     html_content = html_content.replace('{calculator_js}', js_content)
-    html_content = html_content.replace('{st.json(z_latex)}', z_latex)
+    html_content = html_content.replace('{z_latex}', formula)
     html_content = html_content.replace('{params}', json.dumps(params))
     
     return html_content
