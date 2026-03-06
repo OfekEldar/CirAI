@@ -291,13 +291,6 @@ def base64_to_image(base64_str):
 
 def create_project_export(project_data):
     export_dict = project_data.copy()
-    if 'live_desmos_data' in st.session_state and st.session_state['live_desmos_data']:
-        live_data = st.session_state['live_desmos_data']
-        if export_dict.get('res'):
-            if live_data.get('formula'):
-                export_dict['res']['H_latex'] = live_data['formula']
-            if live_data.get('params'):
-                export_dict['res']['live_params_values'] = live_data['params']
     export_dict["img"] = image_to_base64(project_data.get("img"))
     if 'user_info' in st.session_state:
         export_dict["author_name"] = st.session_state['user_info'].get('name', 'Unknown')
@@ -627,7 +620,7 @@ with col_out:
         with col_btn2:
                     if st.button("⚡ Optimize Parameters", use_container_width=True):
                         # ...
-                        opt_result = optimize_circuit(...)
+                        opt_result = optimize_circuit(params, img, H_latex_formula, analysis_request, circuit_uses)
                         if opt_result:
                             st.session_state['project_data']['opt_res'] = opt_result
                             st.success("Optimization complete! Updating calculator...")
@@ -678,9 +671,6 @@ with col_out:
                 st.markdown(adv.get('Recommended_articles_links', "Not found"))
     render_save_project_section(st.session_state['project_data'])
 
-st.markdown("---")
-st.header("3. Interactive Desmos Calculator")
-st.components.v1.html(calculator_html ,height=600)
 show_guidde_video()
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
