@@ -598,10 +598,14 @@ with col_in:
             resistor_path = [["M",0,10],["L",15,10],["L",20,0],["L",30,20],["L",40,0],["L",50,20],["L",55,10],["L",70,10]]
             capacitor_path = [["M",0,15],["L",25,15],["M",25,0],["L",25,30],["M",35,0],["L",35,30],["M",35,15],["L",60,15]]
             gnd_path = [["M",20,0],["L",20,20],["M",0,20],["L",40,20],["M",10,30],["L",30,30],["M",15,40],["L",25,40]]
-
+            pmos_path = [["M", 0, 30], ["L", 15, 30], ["M", 15, 15], ["L", 15, 45],["M", 22, 15], ["L", 22, 45],["M", 22, 20], ["L", 40, 20], ["L", 40, 0],["M", 22, 40], ["L", 40, 40], ["L", 40, 60],["M", 31, 15], ["L", 25, 20], ["L", 31, 25]]
+            nmos_path = [["M", 0, 30], ["L", 15, 30], ["M", 15, 15], ["L", 15, 45],["M", 22, 15], ["L", 22, 45],["M", 22, 20], ["L", 40, 20], ["L", 40, 0],["M", 22, 40], ["L", 40, 40], ["L", 40, 60],["M", 27, 35], ["L", 33, 40], ["L", 27, 45]]
+            opamp_path = [["M", 20, 10], ["L", 20, 50], ["L", 60, 30], ["L", 20, 10],["M", 0, 20], ["L", 20, 20],["M", 0, 40], ["L", 20, 40],["M", 60, 30], ["L", 80, 30],["M", 24, 20], ["L", 30, 20],["M", 24, 40], ["L", 30, 40], ["M", 27, 37], ["L", 27, 43]]
+            inductor_path = [["M", 0, 20], ["L", 10, 20], ["Q", 15, 0, 20, 20], ["Q", 25, 0, 30, 20], ["Q", 35, 0, 40, 20], ["Q", 45, 0, 50, 20], ["L", 60, 20]]
+            
             # 4. Built-in Components Buttons
             st.write("**Add Components:**")
-            col_btn1, col_btn2, col_btn3 = st.columns(3)
+            col_btn1, col_btn2, col_btn3, col_btn4, col_btn5, col_btn6, col_btn7 = st.columns(7)
             with col_btn1:
                 if st.button("➕ Resistor", use_container_width=True):
                     add_component(resistor_path, width=70, height=20)
@@ -609,6 +613,18 @@ with col_in:
                 if st.button("➕ Capacitor", use_container_width=True):
                     add_component(capacitor_path, width=60, height=30)
             with col_btn3:
+                if st.button("➕ Inductor", use_container_width=True):
+                    add_component(inductor_path, width=60, height=30)
+            with col_btn4:
+                if st.button("➕ nmos", use_container_width=True):
+                    add_component(nmos_path, width=60, height=30)
+            with col_btn5:
+                if st.button("➕ pmos", use_container_width=True):
+                    add_component(pmos_path, width=60, height=30)
+            with col_btn6:
+                if st.button("➕ OpAmp", use_container_width=True):
+                    add_component(opamp_path, width=60, height=30)
+            with col_btn7:
                 if st.button("➕ Ground", use_container_width=True):
                     add_component(gnd_path, width=40, height=40)
                     
