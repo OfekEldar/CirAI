@@ -79,10 +79,6 @@ def generate_electrical_schematic_draw():
     #if not all([html_template, css_content, js_content]):
     #   return "<div>Error loading calculator resources</div>"
     css_base64 = encode_css_base64(css_content)
-    html_content = html_template.replace('{css_base64}', css_base64)
-    html_content = html_content.replace('{calculator_js}', js_content)
-    html_content = html_content.replace('{z_latex}', json.dumps(z_latex))
-    html_content = html_content.replace('{params}', json.dumps(params))
     return html_template
 
 def electrical_advisor(image, topology, analysis_request, circuit_uses):
