@@ -17,6 +17,7 @@ import datetime
 from streamlit_oauth import OAuth2Component
 import jwt
 import copy
+import json
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
@@ -120,61 +121,57 @@ def render_draw_circuit_tool():
     """
     st.write("Draw your schematic directly or add predefined components:")
     
-    # --- אתחול הזיכרון ומעקב אחרי שינויי כלים ---
-    if 'initial_drawing' not in st.session_state:
-        st.session_state['initial_drawing'] = {"version": "4.4.0", "objects": []}
-    if 'live_drawing' not in st.session_state:
-        st.session_state['live_drawing'] = {"version": "4.4.0", "objects": []}
+    # --- 1. מקור אמת יחיד לזיכרון הציור ---
+    if 'canvas_state' not in st.session_state:
+        st.session_state['canvas_state'] = {"version": "4.4.0", "objects": []}
     if 'canvas_key' not in st.session_state:
         st.session_state['canvas_key'] = 0
-    # שומרים את הכלי והעובי הקודמים כדי לדעת מתי המשתמש החליף אותם
+        
+    # מעקב אחר שינויי כלים
     if 'last_tool' not in st.session_state:
         st.session_state['last_tool'] = "✏️ Freehand"
     if 'last_width' not in st.session_state:
         st.session_state['last_width'] = 2
 
-    # פונקציית עזר ליצירת נתיבים של רכיבים
-    def get_fabric_path(path_array, width, height):
-        return {
+    # --- 2. פונקציית הזרקת רכיבים חכמה ---
+    def add_component(path_array, w, h):
+        # העתקה עמוקה ובטוחה של הזיכרון כדי למנוע דריסות React
+        current_state = json.loads(json.dumps(st.session_state['canvas_state']))
+        if "objects" not in current_state:
+            current_state["objects"] = []
+            
+        new_obj = {
             "type": "path",
             "left": 150, "top": 150,
-            "width": width, "height": height,
+            "width": w, "height": h,
             "fill": "", "stroke": "black", "strokeWidth": 2,
             "path": path_array
         }
+        current_state['objects'].append(new_obj)
+        
+        # עדכון מקור האמת וטעינה מחדש של הקנבס
+        st.session_state['canvas_state'] = current_state
+        st.session_state['canvas_key'] += 1
+        st.rerun()
 
-    # --- כפתורי הוספת רכיבים ---
+    # --- 3. כפתורי הוספת הרכיבים ---
     col_comp1, col_comp2, col_comp3 = st.columns(3)
     with col_comp1:
         if st.button("➕ Add Resistor", use_container_width=True):
-            new_state = copy.deepcopy(st.session_state['live_drawing'])
             r_path = [["M",0,10],["L",15,10],["L",20,0],["L",30,20],["L",40,0],["L",50,20],["L",55,10],["L",70,10]]
-            new_state['objects'].append(get_fabric_path(r_path, 70, 20))
-            st.session_state['initial_drawing'] = new_state
-            st.session_state['canvas_key'] += 1
-            st.rerun()
-            
+            add_component(r_path, 70, 20)
     with col_comp2:
         if st.button("➕ Add Capacitor", use_container_width=True):
-            new_state = copy.deepcopy(st.session_state['live_drawing'])
             c_path = [["M",0,15],["L",25,15],["M",25,0],["L",25,30],["M",35,0],["L",35,30],["M",35,15],["L",60,15]]
-            new_state['objects'].append(get_fabric_path(c_path, 60, 30))
-            st.session_state['initial_drawing'] = new_state
-            st.session_state['canvas_key'] += 1
-            st.rerun()
-            
+            add_component(c_path, 60, 30)
     with col_comp3:
         if st.button("➕ Add Ground", use_container_width=True):
-            new_state = copy.deepcopy(st.session_state['live_drawing'])
             gnd_path = [["M",20,0],["L",20,20],["M",0,20],["L",40,20],["M",10,30],["L",30,30],["M",15,40],["L",25,40]]
-            new_state['objects'].append(get_fabric_path(gnd_path, 40, 40))
-            st.session_state['initial_drawing'] = new_state
-            st.session_state['canvas_key'] += 1
-            st.rerun()
+            add_component(gnd_path, 40, 40)
             
     st.markdown("---")
 
-    # --- כלי הציור ---
+    # --- 4. הגדרת הכלים ובדיקת שינויים ---
     col_tools1, col_tools2 = st.columns([3, 1])
     with col_tools1:
         draw_tool = st.radio(
@@ -185,14 +182,12 @@ def render_draw_circuit_tool():
     with col_tools2:
         stroke_width = st.slider("Thickness:", 1, 10, 2)
         
-    # --- התיקון לבאג: סנכרון בטוח בעת החלפת כלי או עובי ---
+    # בדיקה האם המשתמש שינה כלי או עובי
     if draw_tool != st.session_state['last_tool'] or stroke_width != st.session_state['last_width']:
-        # מקפיאים את הציור החי (שכולל את הקו האחרון שציירת) והופכים אותו לבסיס
-        st.session_state['initial_drawing'] = copy.deepcopy(st.session_state['live_drawing'])
         st.session_state['last_tool'] = draw_tool
         st.session_state['last_width'] = stroke_width
-        # מרפרשים את הקנבס רק כשהחלפת כלי
-        st.session_state['canvas_key'] += 1
+        # רענון המפתח מבטיח שהקנבס ייווצר מחדש עם הכלי החדש מבלי למחוק את השרטוט
+        st.session_state['canvas_key'] += 1 
 
     if draw_tool == "✏️ Freehand":
         mode, color = "freedraw", "#000000"
@@ -203,9 +198,9 @@ def render_draw_circuit_tool():
         stroke_width = stroke_width * 4  
     else: 
         mode, color = "transform", "#000000"
-        st.info("💡 **Tip:** Use this tool to move, rotate, or delete the components you added!")
+        st.info("💡 **Tip:** Click on a component, then drag to move or use the corners to resize/rotate. Press 'Delete' to remove.")
 
-    # --- רינדור הקנבס ---
+    # --- 5. רינדור הקנבס ---
     canvas_result = st_canvas(
         fill_color="rgba(255, 165, 0, 0.3)",
         stroke_width=stroke_width,
@@ -214,16 +209,17 @@ def render_draw_circuit_tool():
         height=400,
         width=400,
         drawing_mode=mode,
-        initial_drawing=st.session_state['initial_drawing'], 
+        initial_drawing=st.session_state['canvas_state'], 
         key=f"circuit_canvas_{st.session_state['canvas_key']}", 
     )
 
-    # --- שמירת המצב החי בסוד ---
+    # --- 6. סנכרון התוצאות בחזרה לזיכרון הראשי ---
     img_output = None
+    
+    # עדכון מקור האמת מתוך הקנבס באופן רציף (שומר על קווים חדשים שצוירו)
     if canvas_result.json_data is not None:
-        st.session_state['live_drawing'] = canvas_result.json_data
+        st.session_state['canvas_state'] = canvas_result.json_data
 
-    # --- הוצאת התמונה ---
     if canvas_result.image_data is not None:
         is_drawn = np.any(canvas_result.image_data[:, :, :3] != 255)
         if is_drawn:
