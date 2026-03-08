@@ -112,6 +112,83 @@ def electrical_advisor(image, topology, analysis_request, circuit_uses):
             return None
     return None 
 
+def render_draw_circuit_tool():
+    st.write("Draw your schematic directly or add predefined components:")
+    if 'canvas_state' not in st.session_state:
+        st.session_state['canvas_state'] = {"version": "4.4.0", "objects": []}
+    if 'canvas_key' not in st.session_state:
+        st.session_state['canvas_key'] = 0
+    def get_fabric_path(path_array, width, height):
+        return {
+            "type": "path",
+            "left": 150, "top": 150,
+            "width": width, "height": height,
+            "fill": "", "stroke": "black", "strokeWidth": 2,
+            "path": path_array
+        }
+    col_comp1, col_comp2, col_comp3 = st.columns(3)
+    with col_comp1:
+        if st.button("➕ Add Resistor", use_container_width=True):
+            r_path = [["M",0,10],["L",15,10],["L",20,0],["L",30,20],["L",40,0],["L",50,20],["L",55,10],["L",70,10]]
+            st.session_state['canvas_state']['objects'].append(get_fabric_path(r_path, 70, 20))
+            st.session_state['canvas_key'] += 1
+            st.rerun()
+    with col_comp2:
+        if st.button("➕ Add Capacitor", use_container_width=True):
+            c_path = [["M",0,15],["L",25,15],["M",25,0],["L",25,30],["M",35,0],["L",35,30],["M",35,15],["L",60,15]]
+            st.session_state['canvas_state']['objects'].append(get_fabric_path(c_path, 60, 30))
+            st.session_state['canvas_key'] += 1
+            st.rerun()
+    with col_comp3:
+        if st.button("➕ Add Ground", use_container_width=True):
+            gnd_path = [["M",20,0],["L",20,20],["M",0,20],["L",40,20],["M",10,30],["L",30,30],["M",15,40],["L",25,40]]
+            st.session_state['canvas_state']['objects'].append(get_fabric_path(gnd_path, 40, 40))
+            st.session_state['canvas_key'] += 1
+            st.rerun()
+    st.markdown("---")
+    col_tools1, col_tools2 = st.columns([3, 1])
+    with col_tools1:
+        draw_tool = st.radio(
+            "Choose Tool:", 
+            ["✏️ Freehand", "📏 Line", "🧽 Eraser", "🖱️ Select/Delete"], 
+            horizontal=True
+        )
+    with col_tools2:
+        stroke_width = st.slider("Thickness:", 1, 10, 2)
+    if draw_tool == "✏️ Freehand":
+        mode, color = "freedraw", "#000000"
+    elif draw_tool == "📏 Line":
+        mode, color = "line", "#000000"
+    elif draw_tool == "🧽 Eraser":
+        mode, color = "freedraw", "#ffffff"  
+        stroke_width = stroke_width * 4  
+    else: 
+        mode, color = "transform", "#000000"
+        st.info("💡 **Tip:** Use this tool to move, rotate, or delete the components you added!")
+    canvas_result = st_canvas(
+        fill_color="rgba(255, 165, 0, 0.3)",
+        stroke_width=stroke_width,
+        stroke_color=color, 
+        background_color="#ffffff", 
+        height=400,
+        width=400,
+        drawing_mode=mode,
+        initial_drawing=st.session_state['canvas_state'], 
+        key=f"circuit_canvas_{st.session_state['canvas_key']}", 
+    )
+    img_output = None
+    if canvas_result.json_data is not None:
+        st.session_state['canvas_state'] = canvas_result.json_data
+    if canvas_result.image_data is not None:
+        is_drawn = np.any(canvas_result.image_data[:, :, :3] != 255)
+        if is_drawn:
+            rgba_img = Image.fromarray(canvas_result.image_data.astype('uint8'), 'RGBA')
+            white_bg = Image.new("RGB", rgba_img.size, (255, 255, 255))
+            white_bg.paste(rgba_img, mask=rgba_img.split()[3]) 
+            img_output = white_bg
+            st.success("Drawing captured!")
+    return img_output
+
 def bug_detector(image, topology, formula, analysis_request, circuit_uses):
     model = genai.GenerativeModel('gemini-2.5-pro')
     prompt = """
@@ -552,48 +629,9 @@ with col_in:
         elif img is not None:
             st.image(img, caption="Loaded circuit from project", width=350)
     elif input_method == "✏️ Draw Circuit":
-            st.write("Draw your schematic directly (use standard symbols):")
-            col_tools1, col_tools2 = st.columns([3, 1])
-            with col_tools1:
-                draw_tool = st.radio(
-                    "Choose Tool:", 
-                    ["✏️ Freehand", "📏 Line", "🧽 Eraser", "🖱️ Select/Delete"], 
-                    horizontal=True
-                )
-            with col_tools2:
-                stroke_width = st.slider("Thickness:", 1, 10, 2)
-            if draw_tool == "✏️ Freehand":
-                mode = "freedraw"
-                color = "#000000"
-            elif draw_tool == "📏 Line":
-                mode = "line"
-                color = "#000000"
-            elif draw_tool == "🧽 Eraser":
-                mode = "freedraw"
-                color = "#ffffff"  
-                stroke_width = stroke_width * 4  
-            else: 
-                mode = "transform"
-                color = "#000000"
-                st.info("💡 Click on any line or shape you drew and press 'Delete' on your keyboard to remove it.")
-            canvas_result = st_canvas(
-                fill_color="rgba(255, 165, 0, 0.3)",
-                stroke_width=stroke_width,
-                stroke_color=color, 
-                background_color="#ffffff", 
-                height=400,
-                width=400,
-                drawing_mode=mode,
-                key="circuit_canvas",
-            )
-            if canvas_result.image_data is not None:
-                is_drawn = np.any(canvas_result.image_data[:, :, :3] != 255)
-                if is_drawn:
-                    rgba_img = Image.fromarray(canvas_result.image_data.astype('uint8'), 'RGBA')
-                    white_bg = Image.new("RGB", rgba_img.size, (255, 255, 255))
-                    white_bg.paste(rgba_img, mask=rgba_img.split()[3]) 
-                    img = white_bg
-                    st.success("Drawing captured!")
+            drawn_image = render_draw_circuit_tool()
+            if drawn_image is not None:
+                img = drawn_image
     elif input_method == "📝 Netlist":
         st.write("Upload or paste SPICE Netlist:")
         netlist_method = st.radio("Method:", ["Upload Netlist file", "Paste text"], horizontal=True)
