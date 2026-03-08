@@ -16,6 +16,7 @@ from pathlib import Path
 import datetime
 from streamlit_oauth import OAuth2Component
 import jwt
+import copy
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
@@ -119,13 +120,18 @@ def render_draw_circuit_tool():
     """
     st.write("Draw your schematic directly or add predefined components:")
     
-    # --- אתחול הזיכרון (הפרדה בין הציור החי לציור שנטען) ---
+    # --- אתחול הזיכרון ומעקב אחרי שינויי כלים ---
     if 'initial_drawing' not in st.session_state:
         st.session_state['initial_drawing'] = {"version": "4.4.0", "objects": []}
     if 'live_drawing' not in st.session_state:
         st.session_state['live_drawing'] = {"version": "4.4.0", "objects": []}
     if 'canvas_key' not in st.session_state:
         st.session_state['canvas_key'] = 0
+    # שומרים את הכלי והעובי הקודמים כדי לדעת מתי המשתמש החליף אותם
+    if 'last_tool' not in st.session_state:
+        st.session_state['last_tool'] = "✏️ Freehand"
+    if 'last_width' not in st.session_state:
+        st.session_state['last_width'] = 2
 
     # פונקציית עזר ליצירת נתיבים של רכיבים
     def get_fabric_path(path_array, width, height):
@@ -141,20 +147,17 @@ def render_draw_circuit_tool():
     col_comp1, col_comp2, col_comp3 = st.columns(3)
     with col_comp1:
         if st.button("➕ Add Resistor", use_container_width=True):
+            new_state = copy.deepcopy(st.session_state['live_drawing'])
             r_path = [["M",0,10],["L",15,10],["L",20,0],["L",30,20],["L",40,0],["L",50,20],["L",55,10],["L",70,10]]
-            # 1. לוקחים את הציור החי עד כה כדי לא למחוק למשתמש את העבודה
-            new_state = st.session_state['live_drawing'].copy()
-            # 2. מוסיפים לו את הרכיב החדש
             new_state['objects'].append(get_fabric_path(r_path, 70, 20))
-            # 3. דורסים את ציור הבסיס ומרפרשים את הקנבס פעם אחת
             st.session_state['initial_drawing'] = new_state
             st.session_state['canvas_key'] += 1
             st.rerun()
             
     with col_comp2:
         if st.button("➕ Add Capacitor", use_container_width=True):
+            new_state = copy.deepcopy(st.session_state['live_drawing'])
             c_path = [["M",0,15],["L",25,15],["M",25,0],["L",25,30],["M",35,0],["L",35,30],["M",35,15],["L",60,15]]
-            new_state = st.session_state['live_drawing'].copy()
             new_state['objects'].append(get_fabric_path(c_path, 60, 30))
             st.session_state['initial_drawing'] = new_state
             st.session_state['canvas_key'] += 1
@@ -162,8 +165,8 @@ def render_draw_circuit_tool():
             
     with col_comp3:
         if st.button("➕ Add Ground", use_container_width=True):
+            new_state = copy.deepcopy(st.session_state['live_drawing'])
             gnd_path = [["M",20,0],["L",20,20],["M",0,20],["L",40,20],["M",10,30],["L",30,30],["M",15,40],["L",25,40]]
-            new_state = st.session_state['live_drawing'].copy()
             new_state['objects'].append(get_fabric_path(gnd_path, 40, 40))
             st.session_state['initial_drawing'] = new_state
             st.session_state['canvas_key'] += 1
@@ -182,6 +185,15 @@ def render_draw_circuit_tool():
     with col_tools2:
         stroke_width = st.slider("Thickness:", 1, 10, 2)
         
+    # --- התיקון לבאג: סנכרון בטוח בעת החלפת כלי או עובי ---
+    if draw_tool != st.session_state['last_tool'] or stroke_width != st.session_state['last_width']:
+        # מקפיאים את הציור החי (שכולל את הקו האחרון שציירת) והופכים אותו לבסיס
+        st.session_state['initial_drawing'] = copy.deepcopy(st.session_state['live_drawing'])
+        st.session_state['last_tool'] = draw_tool
+        st.session_state['last_width'] = stroke_width
+        # מרפרשים את הקנבס רק כשהחלפת כלי
+        st.session_state['canvas_key'] += 1
+
     if draw_tool == "✏️ Freehand":
         mode, color = "freedraw", "#000000"
     elif draw_tool == "📏 Line":
@@ -202,18 +214,16 @@ def render_draw_circuit_tool():
         height=400,
         width=400,
         drawing_mode=mode,
-        # ניזון מהציור ההתחלתי שמתעדכן רק בלחיצת כפתור, מה שמונע את הלולאה
         initial_drawing=st.session_state['initial_drawing'], 
         key=f"circuit_canvas_{st.session_state['canvas_key']}", 
     )
 
-    # --- שמירת המצב החי והוצאת התמונה ---
+    # --- שמירת המצב החי בסוד ---
     img_output = None
-    
-    # שמירה שקטה של הציור שהמשתמש עושה עכשיו, בלי לעדכן את הקנבס חזרה!
     if canvas_result.json_data is not None:
         st.session_state['live_drawing'] = canvas_result.json_data
 
+    # --- הוצאת התמונה ---
     if canvas_result.image_data is not None:
         is_drawn = np.any(canvas_result.image_data[:, :, :3] != 255)
         if is_drawn:
