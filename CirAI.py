@@ -76,10 +76,12 @@ def generate_electrical_schematic_draw():
     html_template = load_static_file('circuit_diagram.html')
     css_content = load_static_file('diagram.css')
     js_content = load_static_file('circuit_diagram.js')
-    #if not all([html_template, css_content, js_content]):
-    #   return "<div>Error loading calculator resources</div>"
+    if not all([html_template, css_content, js_content]):
+        return "<div>Error loading calculator resources</div>" 
     css_base64 = encode_css_base64(css_content)
-    return html_template
+    html_content = html_template.replace('{css_base64}', css_base64)
+    html_content = html_content.replace('{js_content}', js_content)
+    return html_content
 
 def electrical_advisor(image, topology, analysis_request, circuit_uses):
     prompt = """
