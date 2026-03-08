@@ -72,6 +72,17 @@ def generate_calculator_html(z_latex, params=[]):
     
     return html_content
 
+def generate_electrical_schematic_draw():
+    html_template = load_static_file('circuit_diagram.html')
+    css_content = load_static_file('diagram.css')
+    js_content = load_static_file('circuit_diagram.js')
+    #if not all([html_template, css_content, js_content]):
+    #   return "<div>Error loading calculator resources</div>"
+    css_base64 = encode_css_base64(css_content)
+    html_content = html_template.replace('{css_base64}', css_base64)
+    html_content = html_content.replace('{calculator_js}', js_content)
+    return html_content
+
 def electrical_advisor(image, topology, analysis_request, circuit_uses):
     prompt = """
     You are an expert Analog IC Design Engineer.
@@ -525,7 +536,7 @@ with col_in:
     analysis_request = st.text_input("Function to analyze (for example: Vout/Vin, Z(Vout) etc.):", value="Vout")
     input_method = st.radio(
         "Select Input Method:", 
-        ["🖼️ Upload / Paste", "✏️ Draw Circuit", "📝 Netlist"], 
+        ["🖼️ Upload / Paste", "✏️ Draw Circuit", "📝 Netlist", "Use circuit diagram"], 
         horizontal=True
     )
     img = st.session_state['project_data'].get('img')
@@ -666,6 +677,10 @@ with col_in:
                 netlist_content = net_file.read().decode("utf-8")
         elif netlist_method == "Paste text":
             netlist_content = st.text_area("Paste here (SPICE format):", height=200)
+    elif input_method == "Use circuit diagram":
+        circuit_diagram_html = generate_electrical_schematic_draw()
+        with st.expander("🛠️ How to Draw Circuits for Analysis", expanded=False):
+            st.components.v1.html(circuit_diagram_html, height=600)
     derivation_steps = st.radio("Derivation Steps:", ["None", "Show derivation steps in markdown format"])
     st.markdown("---")
     derivation_steps_flag = 1 if derivation_steps == "Show derivation steps in markdown format" else 0
