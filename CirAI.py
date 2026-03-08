@@ -16,7 +16,6 @@ from pathlib import Path
 import datetime
 from streamlit_oauth import OAuth2Component
 import jwt
-import time
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
@@ -36,15 +35,6 @@ derivation_steps_flag = 0
 img, topology, analysis_request, circuit_uses = None, None, None, None
 performance_advice, power_advice, noise_advice, component_advice, Recommended_articles_links = None, None, None, None, None
 model = genai.GenerativeModel('gemini-2.5-pro')
-resistor_path = [
-    ["M", 0, 10], ["L", 10, 10], ["L", 15, 0], ["L", 25, 20],
-    ["L", 35, 0], ["L", 45, 20], ["L", 50, 10], ["L", 60, 10]
-]
-
-capacitor_path = [
-    ["M", 0, 15], ["L", 25, 15], ["M", 25, 0], ["L", 25, 30],
-    ["M", 35, 0], ["L", 35, 30], ["M", 35, 15], ["L", 60, 15]
-]
 
 def load_static_file(filename):
     """Load content from static file"""
@@ -198,29 +188,6 @@ def render_draw_circuit_tool():
             img_output = white_bg
             st.success("Drawing captured!")
     return img_output
-
-def add_component(path_array, width, height):
-    new_component = {
-        "type": "path",
-        "version": "4.4.0",
-        "originX": "left",
-        "originY": "top",
-        "left": 50,  # Default spawn position X
-        "top": 50,   # Default spawn position Y
-        "width": width,
-        "height": height,
-        "fill": "transparent",
-        "stroke": "#000000",
-        "strokeWidth": 2,
-        "strokeLineCap": "round",
-        "strokeLineJoin": "round",
-        "path": path_array,
-        "selectable": True,
-        "evented": True
-    }
-    st.session_state["drawing_data"]["objects"].append(new_component)
-    # Force the canvas to re-render with the new component by updating its key
-    st.session_state["canvas_key"] = f"circuit_canvas_{time.time()}"
 
 def bug_detector(image, topology, formula, analysis_request, circuit_uses):
     model = genai.GenerativeModel('gemini-2.5-pro')
@@ -597,10 +564,6 @@ if 'res' not in st.session_state:
 col_in, col_out = st.columns([1, 2])
 
 with col_in:
-    if "drawing_data" not in st.session_state:
-        st.session_state["drawing_data"] = {"version": "4.4.0", "objects": []}
-    if "canvas_key" not in st.session_state:
-        st.session_state["canvas_key"] = "circuit_canvas_0"
     st.header("1. Input (Image or Netlist)")
     uploaded_file = st.file_uploader("Upload project file", type=["json"])
     if uploaded_file is not None:
@@ -608,12 +571,8 @@ with col_in:
             if st.session_state.get('last_uploaded_file_content') != file_content:
                 try:
                     loaded_data = json.loads(file_content)
-                    
-                    # 1. פענוח התמונה
                     img_data = loaded_data.get("img") or loaded_data.get("imag")
                     img_obj = base64_to_image(img_data)
-                    
-                    # 2. בניית אובייקט ה-res (תמיכה בפורמט חדש וישן)
                     if loaded_data.get("res"):
                         res_data = loaded_data["res"]
                     else:
@@ -623,8 +582,6 @@ with col_in:
                             "params": loaded_data.get("params", []),
                             "topology": loaded_data.get("topology", "Loaded Project (Legacy)")
                         }
-                    
-                    # 3. עדכון כל הנתונים בפעולה אחת נקייה (Update)
                     st.session_state['project_data'].update({
                         'img': img_obj,
                         'netlist_text': loaded_data.get("netlist_text", ""),
@@ -635,14 +592,10 @@ with col_in:
                         'feedbacks': loaded_data.get("feedbacks", []),
                         'res': res_data
                     })
-                    
-                    # 4. שחזור הפרמטרים הידניים שהמשתמש שמר בפרויקט
                     if 'live_params_values' in res_data:
                         st.session_state['manual_params'] = res_data['live_params_values']
-                    
                     st.session_state['last_uploaded_file_content'] = file_content
                     st.success("Project loaded successfully!")
-                    
                 except Exception as e:
                     st.error(f"Error loading project: {e}")
     analysis_request = st.text_input("Function to analyze (for example: Vout/Vin, Z(Vout) etc.):", value="Vout")
@@ -666,72 +619,48 @@ with col_in:
         elif img is not None:
             st.image(img, caption="Loaded circuit from project", width=350)
     elif input_method == "✏️ Draw Circuit":
-        st.write("Draw your schematic directly (use standard symbols):")
-        
-        # --- New: Built-in Components Buttons ---
-        st.write("**Add Components:**")
-        col_btn1, col_btn2, col_btn3 = st.columns(3)
-        with col_btn1:
-            if st.button("➕ Resistor"):
-                add_component(resistor_path, width=60, height=20)
-        with col_btn2:
-            if st.button("➕ Capacitor"):
-                add_component(capacitor_path, width=60, height=30)
-                
-        st.divider()
-
-        # --- Toolbar ---
-        col_tools1, col_tools2 = st.columns([3, 1])
-        with col_tools1:
-            draw_tool = st.radio(
-                "Choose Tool:", 
-                ["✏️ Freehand", "📏 Line", "🧽 Eraser", "🖱️ Select/Delete"], 
-                horizontal=True
+            st.write("Draw your schematic directly (use standard symbols):")
+            col_tools1, col_tools2 = st.columns([3, 1])
+            with col_tools1:
+                draw_tool = st.radio(
+                    "Choose Tool:", 
+                    ["✏️ Freehand", "📏 Line", "🧽 Eraser", "🖱️ Select/Delete"], 
+                    horizontal=True
+                )
+            with col_tools2:
+                stroke_width = st.slider("Thickness:", 1, 10, 2)
+            if draw_tool == "✏️ Freehand":
+                mode = "freedraw"
+                color = "#000000"
+            elif draw_tool == "📏 Line":
+                mode = "line"
+                color = "#000000"
+            elif draw_tool == "🧽 Eraser":
+                mode = "freedraw"
+                color = "#ffffff"  
+                stroke_width = stroke_width * 4  
+            else: 
+                mode = "transform"
+                color = "#000000"
+                st.info("💡 Click on any line or shape you drew and press 'Delete' on your keyboard to remove it.")
+            canvas_result = st_canvas(
+                fill_color="rgba(255, 165, 0, 0.3)",
+                stroke_width=stroke_width,
+                stroke_color=color, 
+                background_color="#ffffff", 
+                height=400,
+                width=400,
+                drawing_mode=mode,
+                key="circuit_canvas",
             )
-        with col_tools2:
-            stroke_width = st.slider("Thickness:", 1, 10, 2)
-            
-        if draw_tool == "✏️ Freehand":
-            mode = "freedraw"
-            color = "#000000"
-        elif draw_tool == "📏 Line":
-            mode = "line"
-            color = "#000000"
-        elif draw_tool == "🧽 Eraser":
-            mode = "freedraw"
-            color = "#ffffff"  
-            stroke_width = stroke_width * 4  
-        else: 
-            mode = "transform"
-            color = "#000000"
-            st.info("💡 Click on any line or shape you drew and press 'Delete' on your keyboard to remove it.")
-
-        # --- Canvas ---
-        canvas_result = st_canvas(
-            fill_color="rgba(255, 165, 0, 0.3)",
-            stroke_width=stroke_width,
-            stroke_color=color, 
-            background_color="#ffffff", 
-            height=400,
-            width=400,
-            drawing_mode=mode,
-            initial_drawing=st.session_state["drawing_data"], # Feed the saved state here!
-            key=st.session_state["canvas_key"], # Use dynamic key for updates
-        )
-
-        # --- Save the state to avoid losing lines on tool switch ---
-        if canvas_result.json_data is not None:
-            st.session_state["drawing_data"] = canvas_result.json_data
-
-        # --- Processing the Image ---
-        if canvas_result.image_data is not None:
-            is_drawn = np.any(canvas_result.image_data[:, :, :3] != 255)
-            if is_drawn:
-                rgba_img = Image.fromarray(canvas_result.image_data.astype('uint8'), 'RGBA')
-                white_bg = Image.new("RGB", rgba_img.size, (255, 255, 255))
-                white_bg.paste(rgba_img, mask=rgba_img.split()[3]) 
-                img = white_bg
-                st.success("Drawing captured!")
+            if canvas_result.image_data is not None:
+                is_drawn = np.any(canvas_result.image_data[:, :, :3] != 255)
+                if is_drawn:
+                    rgba_img = Image.fromarray(canvas_result.image_data.astype('uint8'), 'RGBA')
+                    white_bg = Image.new("RGB", rgba_img.size, (255, 255, 255))
+                    white_bg.paste(rgba_img, mask=rgba_img.split()[3]) 
+                    img = white_bg
+                    st.success("Drawing captured!")
     elif input_method == "📝 Netlist":
         st.write("Upload or paste SPICE Netlist:")
         netlist_method = st.radio("Method:", ["Upload Netlist file", "Paste text"], horizontal=True)
