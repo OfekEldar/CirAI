@@ -86,7 +86,7 @@ def electrical_advisor(image, topology, analysis_request, circuit_uses):
         "power_advice": "Detailed advice on reducing power consumption",
         "noise_advice": "Detailed advice on minimizing noise",
         "component_advice": "Specific recommendations for component selection and values",
-        "Recommended_articles_links": "Recommendation for articles related to the circuit, similar circuits, similar architectures, etc. give a links to the articles in this format: "Article 1, Article 2, Article 3, ... " 
+        "Recommended_articles_links": "Recommendation for articles ONLY related to the circuit (ONLY from reliable sources: IEEE, JSSC, etc.), similar circuits, similar architectures, etc. give a links to the articles in this format: "Article 1, Article 2, Article 3, ..." 
     }
     """
     content_inputs = [prompt]
@@ -111,6 +111,52 @@ def electrical_advisor(image, topology, analysis_request, circuit_uses):
             print(f"Raw response: {response.text[:500]}...")
             return None
     return None 
+
+def bug_detector(image, topology, formula, analysis_request, circuit_uses):
+    model = genai.GenerativeModel('gemini-2.5-pro')
+    prompt = """
+    You are a strict Senior Analog VLSI Design Reviewer. 
+    Analyze the provided schematic and circuit information to detect any architectural bugs, incorrect connections, or fundamental design flaws.
+    
+    Input provided:
+    - Topology: {topology if topology else 'Unknown'}
+    - Derived Formula: {formula if formula else 'Unknown'}
+    - Analysis Request: {analysis_request if analysis_request else 'Unknown'}
+    - Circuit Use Cases: {circuit_uses if circuit_uses else 'Unknown'}
+    
+    Look specifically for issues such as:
+    - Floating nodes, missing DC bias paths, or missing ground references.
+    - Transistors lacking proper biasing elements or connected in ways that force them out of their desired operating region.
+    - Missing compensation (e.g., Miller, lead-lag) in feedback loops leading to potential instability.
+    - Shorted inputs/outputs or incorrect polarity in differential pairs.
+    - Unrealistic component configurations given the stated use case.
+    
+    Output ONLY a valid JSON object matching this exact format:
+    {{
+        "bug_found": "Yes" or "No",
+        "severity": "None/Low/Medium/High/Critical",
+        "bug_description": "Detailed engineering explanation of the specific bugs or topological flaws found. If none, write 'No structural bugs detected.'",
+        "suggested_fix": "Actionable instructions on how to fix the identified issues. If none, write 'N/A'"
+    }}
+    """
+    
+    content_inputs = [prompt]
+    if image:
+        content_inputs.append(image)
+        
+    response = model.generate_content(content_inputs)
+    text = response.text.replace("```json", "").replace("```", "").strip()
+    match = re.search(r'\{.*\}', text, re.DOTALL)
+    
+    if match:
+        try:
+            json_str = match.group()
+            json_str = re.sub(r'[\x00-\x1f\x7f-\x9f]', '', json_str)
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            print(f"JSON parsing error: {e}")
+            return None
+    return None
 
 def analyze_circuit(image, netlist_text, analysis_request, derivation_steps_flag):
     model = genai.GenerativeModel('gemini-2.5-pro')
@@ -174,6 +220,7 @@ def optimize_circuit(bounded_param_list, image, formula, analysis_request, circu
     1. The "optimized_parameters" values MUST BE EXACT ALPHANUMERIC STRINGS representing the calculated numerical value and its engineering prefix (e.g., "100f", "5p", "10n", "2.5u", "50m", "10", "1k", "10M").
     2. DO NOT output ANY descriptive text or explanations (like "maximum of range") inside the "optimized_parameters" values. 
     3. Put all your reasoning, explanations, and descriptions ONLY in the "optimization_advice" string.
+    4. use only the provided parameters in the optimization and do not add any new parameter that is not in the list.
 
     Output ONLY a valid JSON object matching this exact format:
     {{
@@ -431,6 +478,7 @@ if 'project_data' not in st.session_state:
         "res": None,
         "advisor_res": None,
         "opt_res": None,
+        "bug_res": None,
         "feedbacks": [] 
     }
 st.title("CirAI | AI Circuit Analysis & Analog IC Design Copilot")
@@ -602,6 +650,22 @@ with col_out:
             for i, original_name in enumerate(original_params):
                 if original_name in saved_params and str(saved_params[original_name]).strip() != "":
                     params[i]['value'] = str(saved_params[original_name]).strip()
+        with st.spinner("Running architecture & topology bug check..."):
+            topology = res.get('topology', '')
+            formula = res.get('H_latex_formula', '')
+            c_uses = st.session_state['project_data'].get('circuit_uses', '')
+            bug_res = bug_detector(img, topology, formula, analysis_request, c_uses)
+            st.session_state['project_data']['bug_res'] = bug_res
+        bug_res = st.session_state['project_data'].get('bug_res')
+        if bug_res and bug_res.get("bug_found", "No") == "Yes":
+            st.error("⚠️ **Architectural Flaw or Bug Detected!**")
+            with st.expander("🚨 View Bug Details & Suggested Fix", expanded=True):
+                severity_color = "red" if bug_res.get('severity') in ["High", "Critical"] else "orange" if bug_res.get('severity') == "Medium" else "green"
+                st.markdown(f"**Severity:** :{severity_color}[{bug_res.get('severity', 'N/A')}]")
+                st.markdown("**Bug Description:**")
+                st.write(bug_res.get('bug_description', 'N/A'))
+                st.markdown("**Suggested Fix:**")
+                st.write(bug_res.get('suggested_fix', 'N/A'))
         opt_res = st.session_state['project_data'].get('opt_res')
         if opt_res:
                     opt_dict = opt_res.get("optimized_parameters", {})
@@ -618,6 +682,7 @@ with col_out:
         st.latex(rf"\large {H_latex_formula}")
         st.markdown("---")
         st.info("**Debugging:** Open browser console (F12) to see detailed calculator initialization logs and verify settings are applied correctly.")
+
         with st.expander("Watch full development"):
             st.write("Analysis process:")
             st.markdown(res.get('derivation_steps', "Not found"))
@@ -669,7 +734,7 @@ with col_out:
             unsafe_allow_html=True
         )
         circuit_uses = st.text_area("Describe the use cases of the circuit (for example: low noise amplifier for 1GHz, power amplifier for 100MHz etc.):", height=150)
-        col_btn1, col_btn2 = st.columns(2)
+        col_btn1, col_btn2, col_btn3 = st.columns(3)
         with col_btn1:
             if st.button("AI Circuit Advisor"):
                 if not img:
@@ -680,7 +745,6 @@ with col_out:
                         st.session_state['project_data']['advisor_res'] = electrical_advisor(img, topology, analysis_request, circuit_uses)
         with col_btn2:
                     if st.button("⚡ Optimize Parameters", use_container_width=True):
-                        # ...
                         opt_result = optimize_circuit(params, img, H_latex_formula, analysis_request, circuit_uses)
                         if opt_result:
                             st.session_state['project_data']['opt_res'] = opt_result
