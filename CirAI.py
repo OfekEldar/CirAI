@@ -607,26 +607,26 @@ with col_in:
             st.write("**Add Components:**")
             col_btn1, col_btn2, col_btn3, col_btn4, col_btn5, col_btn6, col_btn7 = st.columns(7)
             with col_btn1:
-                if st.button("➕ Res", use_container_width=True):
-                    add_component(resistor_path, width=40, height=20)
+                if st.button("Res", use_container_width=True):
+                    add_component(resistor_path, width=70, height=20)
             with col_btn2:
-                if st.button("➕ Cap", use_container_width=True):
-                    add_component(capacitor_path, width=40, height=10)
+                if st.button("Cap", use_container_width=True):
+                    add_component(capacitor_path, width=60, height=30)
             with col_btn3:
-                if st.button("➕ Inductor", use_container_width=True):
-                    add_component(inductor_path, width=40, height=10)
+                if st.button("Ind", use_container_width=True):
+                    add_component(inductor_path, width=40, height=30)
             with col_btn4:
-                if st.button("➕ nmos", use_container_width=True):
-                    add_component(nmos_path, width=40, height=10)
+                if st.button("nmos", use_container_width=True):
+                    add_component(nmos_path, width=60, height=30)
             with col_btn5:
-                if st.button("➕ pmos", use_container_width=True):
-                    add_component(pmos_path, width=40, height=10)
+                if st.button("pmos", use_container_width=True):
+                    add_component(pmos_path, width=60, height=30)
             with col_btn6:
-                if st.button("➕ OpAmp", use_container_width=True):
-                    add_component(opamp_path, width=40, height=10)
+                if st.button("OpAmp", use_container_width=True):
+                    add_component(opamp_path, width=60, height=30)
             with col_btn7:
-                if st.button("➕ Ground", use_container_width=True):
-                    add_component(gnd_path, width=40, height=10)
+                if st.button("GND", use_container_width=True):
+                    add_component(gnd_path, width=40, height=40)
                     
             st.divider()
 
