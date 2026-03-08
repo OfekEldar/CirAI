@@ -83,6 +83,11 @@ def generate_electrical_schematic_draw():
     html_content = html_content.replace('{js_content}', js_content)
     return html_content
 
+def open_editor_modal():
+    circuit_diagram_html = generate_electrical_schematic_draw()
+    st.info("💡 Draw your circuit here with plenty of space!")
+    st.components.v1.html(circuit_diagram_html, height=700)
+
 def electrical_advisor(image, topology, analysis_request, circuit_uses):
     prompt = """
     You are an expert Analog IC Design Engineer.
@@ -536,7 +541,7 @@ with col_in:
     analysis_request = st.text_input("Function to analyze (for example: Vout/Vin, Z(Vout) etc.):", value="Vout")
     input_method = st.radio(
         "Select Input Method:", 
-        ["🖼️ Upload / Paste", "✏️ Draw Circuit", "📝 Netlist", "Use circuit diagram"], 
+        ["🖼️ Upload / Paste", "✏️ Draw Circuit", "📝 Netlist"], 
         horizontal=True
     )
     img = st.session_state['project_data'].get('img')
@@ -693,10 +698,6 @@ with col_in:
                 netlist_content = net_file.read().decode("utf-8")
         elif netlist_method == "Paste text":
             netlist_content = st.text_area("Paste here (SPICE format):", height=200)
-    elif input_method == "Use circuit diagram":
-        circuit_diagram_html = generate_electrical_schematic_draw()
-        with st.expander("🛠️ How to Draw Circuits for Analysis", expanded=False):
-            st.components.v1.html(circuit_diagram_html, height=600)
     derivation_steps = st.radio("Derivation Steps:", ["None", "Show derivation steps in markdown format"])
     st.markdown("---")
     derivation_steps_flag = 1 if derivation_steps == "Show derivation steps in markdown format" else 0
@@ -891,7 +892,7 @@ with col_out:
                 st.markdown("**Recommended Articles:**")
                 st.markdown(adv.get('Recommended_articles_links', "Not found"))
     render_save_project_section(st.session_state['project_data'])
-
+open_editor_modal()
 show_guidde_video()
 if 'chat_history' not in st.session_state:
     st.session_state['chat_history'] = []
