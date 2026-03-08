@@ -16,6 +16,7 @@ from pathlib import Path
 import datetime
 from streamlit_oauth import OAuth2Component
 import jwt
+import copy
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
 CLIENT_ID = st.secrets["GOOGLE_CLIENT_ID"]
@@ -543,12 +544,11 @@ with col_in:
             st.image(img, caption="Loaded circuit from project", width=350)
     elif input_method == "✏️ Draw Circuit":
             st.write("Draw your schematic directly (use standard symbols):")
-            
-            # 1. Initialize session state for the drawing data and canvas key
+    # 1. Initialize session state
             if "drawing_data" not in st.session_state:
                 st.session_state["drawing_data"] = {"version": "4.4.0", "objects": []}
-            if "canvas_key" not in st.session_state:
-                st.session_state["canvas_key"] = "circuit_canvas_0"
+            if "just_added" not in st.session_state:
+                st.session_state["just_added"] = False
 
             # 2. Helper function to add components
             def add_component(path_array, width, height):
@@ -557,8 +557,8 @@ with col_in:
                     "version": "4.4.0",
                     "originX": "left",
                     "originY": "top",
-                    "left": 150,  # X spawn position
-                    "top": 150,   # Y spawn position
+                    "left": 150,  
+                    "top": 150,   
                     "width": width,
                     "height": height,
                     "fill": "transparent",
@@ -570,9 +570,15 @@ with col_in:
                     "selectable": True,
                     "evented": True
                 }
-                st.session_state["drawing_data"]["objects"].append(new_component)
-                # Update key to force canvas re-render
-                st.session_state["canvas_key"] = f"circuit_canvas_{datetime.datetime.now().timestamp()}"
+                
+                # ניצור עותק חדש כדי ש-Streamlit יזהה שינוי אמיתי בזיכרון ויעדכן את הקנבס בלי להרוס אותו
+                import copy
+                current_objects = copy.deepcopy(st.session_state["drawing_data"].get("objects", []))
+                current_objects.append(new_component)
+                
+                st.session_state["drawing_data"]["objects"] = current_objects
+                # נדליק את הדגל כדי שהקנבס לא ישמור את המצב הישן שלו ברענון הנוכחי
+                st.session_state["just_added"] = True
 
             # 3. Component Paths
             resistor_path = [["M",0,10],["L",15,10],["L",20,0],["L",30,20],["L",40,0],["L",50,20],["L",55,10],["L",70,10]]
@@ -620,7 +626,7 @@ with col_in:
                 color = "#000000"
                 st.info("💡 Click on any line or shape you drew and press 'Delete' on your keyboard to remove it.")
 
-            # 6. Render Canvas
+            # 6. Render Canvas (מפתח קבוע לחלוטין!)
             canvas_result = st_canvas(
                 fill_color="rgba(255, 165, 0, 0.3)",
                 stroke_width=stroke_width,
@@ -629,13 +635,17 @@ with col_in:
                 height=400,
                 width=400,
                 drawing_mode=mode,
-                initial_drawing=st.session_state["drawing_data"], # Inject the state
-                key=st.session_state["canvas_key"], # Dynamic key for instant updates
+                initial_drawing=st.session_state["drawing_data"],
+                key="circuit_canvas_main", 
             )
 
-            # 7. Update state and process image
+            # 7. Update state smoothly without race conditions
             if canvas_result.json_data is not None:
-                st.session_state["drawing_data"] = canvas_result.json_data
+                if st.session_state.get("just_added", False):
+                    # אם הוספנו כרגע רכיב מכפתור, אנחנו מדלגים על השמירה כדי לא לדרוס אותו עם המידע שהיה בקנבס שנייה לפני כן
+                    st.session_state["just_added"] = False
+                else:
+                    st.session_state["drawing_data"] = canvas_result.json_data
 
             if canvas_result.image_data is not None:
                 is_drawn = np.any(canvas_result.image_data[:, :, :3] != 255)
