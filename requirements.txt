@@ -4,4 +4,5 @@ streamlit_drawable_canvas
 google-generativeai
 Pillow
 streamlit_oauth
+jwt
 PyJWT

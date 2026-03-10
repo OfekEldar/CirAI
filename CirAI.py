@@ -15,7 +15,7 @@ from PIL import Image
 from pathlib import Path
 import datetime
 from streamlit_oauth import OAuth2Component
-from jwt import decode
+import jwt
 import copy
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
@@ -470,7 +470,7 @@ def connection():
             st.rerun()
         st.stop()
     token = st.session_state['google_token']
-    user_info = decode(token['id_token'], options={"verify_signature": False}, algorithms=["RS256"])
+    user_info = jwt.decode(token['id_token'], options={"verify_signature": False}, algorithms=["RS256"])
     st.session_state['user_info'] = user_info
     with st.sidebar:
         st.write(f"Hello, **{user_info['name']}**")
