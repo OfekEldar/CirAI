@@ -15,7 +15,7 @@ from PIL import Image
 from pathlib import Path
 import datetime
 from streamlit_oauth import OAuth2Component
-from PyJWT import decode
+from jwt import decode
 import copy
 
 GOOGLE_API_KEY = st.secrets["GOOGLE_API_KEY"]
