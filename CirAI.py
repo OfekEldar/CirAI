@@ -486,7 +486,7 @@ st.set_page_config(
     page_icon="⚡",
     layout="wide"
 )
-connection()
+#connection()
 if 'project_data' not in st.session_state:
     st.session_state['project_data'] = {
         "img": None,
