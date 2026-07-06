@@ -498,8 +498,9 @@ def check_bugs(img, topology, formula, analysis_request):
             st.markdown("**Suggested Fix:**")
             st.write(bug_res.get('suggested_fix', 'N/A'))
 
-def open_desmos_calculator():
-    
+def open_desmos_calculator(formula,params):
+    calculator_html = generate_calculator_html(z_init, params=[R_e, C_e])
+    st.components.v1.html(calculator_html, height=600)
 
 # --- GUI --- #
 st.set_page_config(
@@ -754,8 +755,8 @@ with col_out:
         st.image(example_img, caption="Example circuit analysis", width=350)
         R_e = {"name": "R_e", "value": "100", "min": "1", "max": "1000", "step": "10"}
         C_e = {"name": "C_e", "value": "1p", "min": "1f", "max": "10p", "step": "0.1p"}
-        #calculator_html = generate_calculator_html(z_init, params=[R_e, C_e])
-        #st.components.v1.html(calculator_html, height=600)
+        calculator_html = generate_calculator_html(z_init, params=[R_e, C_e])
+        st.components.v1.html(calculator_html, height=600)
     else:
         res = st.session_state['project_data'].get('res')
         z_latex = res.get('H_latex', '0')
@@ -902,8 +903,6 @@ with col_out:
                 st.markdown("**Recommended Articles:**")
                 st.markdown(adv.get('Recommended_articles_links', "Not found"))
     render_save_project_section(st.session_state['project_data'])
-calculator_html = generate_calculator_html(z_init, params=[R_e, C_e])
-st.components.v1.html(calculator_html, height=600)
 open_editor_modal()
 show_guidde_video()
 if 'chat_history' not in st.session_state:
