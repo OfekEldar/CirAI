@@ -176,7 +176,6 @@ def bug_detector(image, topology, formula, analysis_request, circuit_uses):
     return None
 
 def analyze_circuit(image, netlist_text, analysis_request, derivation_steps_flag):
-    model = genai.GenerativeModel('gemini-2.5-pro')
     prompt = """
     You are an expert Analog IC Design Engineer.
     Input provided:
@@ -221,7 +220,6 @@ def analyze_circuit(image, netlist_text, analysis_request, derivation_steps_flag
     return None
 
 def optimize_circuit(bounded_param_list, image, formula, analysis_request, circuit_uses):
-    model = genai.GenerativeModel('gemini-2.5-pro')
     prompt = """
     You are an expert Analog IC Design Engineer.
     Input provided:
@@ -938,7 +936,7 @@ with st.sidebar:
         Keep your answers professional, highly technical, and concise. Use standard VLSI terminology.
         {current_context}
         """
-        chat_model = genai.GenerativeModel('gemini-2.5-pro',system_instruction=sys_prompt)
+        chat_model = genai.GenerativeModel('gemini-3.5-pro',system_instruction=sys_prompt)
         gemini_history = [
             {"role": "user" if msg["role"] == "user" else "model", "parts": [msg["content"]]} 
             for msg in st.session_state['chat_history']
