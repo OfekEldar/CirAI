@@ -499,8 +499,7 @@ def check_bugs(img, topology, formula, analysis_request):
             st.write(bug_res.get('suggested_fix', 'N/A'))
 
 def open_desmos_calculator():
-    calculator_html = generate_calculator_html(z_init, params=[R_e, C_e])
-    st.components.v1.html(calculator_html, height=600)
+    
 
 # --- GUI --- #
 st.set_page_config(
@@ -903,7 +902,8 @@ with col_out:
                 st.markdown("**Recommended Articles:**")
                 st.markdown(adv.get('Recommended_articles_links', "Not found"))
     render_save_project_section(st.session_state['project_data'])
-open_desmos_calculator()
+calculator_html = generate_calculator_html(z_init, params=[R_e, C_e])
+st.components.v1.html(calculator_html, height=600)
 open_editor_modal()
 show_guidde_video()
 if 'chat_history' not in st.session_state:
