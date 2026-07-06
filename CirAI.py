@@ -130,7 +130,6 @@ def electrical_advisor(image, topology, analysis_request, circuit_uses):
     return None 
 
 def bug_detector(image, topology, formula, analysis_request, circuit_uses):
-    model = genai.GenerativeModel('gemini-2.5-pro')
     prompt = """
     You are a strict Senior Analog VLSI Design Reviewer. 
     Analyze the provided schematic and circuit information to detect any architectural bugs, incorrect connections, or fundamental design flaws.
@@ -523,7 +522,7 @@ model = st.radio("Model:", ["gemini 3.5 flash (fast model)", "gemini 3.1 pro (ac
 if model == "gemini 3.5 flash (fast model)":
     model = genai.GenerativeModel('gemini-3.5-flash')
 if model == "gemini 3.1 pro (accurate model)":
-    model = genai.GenerativeModel('gemini-3.1-pro')
+    model = genai.GenerativeModel('gemini-3.1-pro-preview')
 if 'res' not in st.session_state:
     st.session_state['res'] = None
 col_in, col_out = st.columns([1, 2])
