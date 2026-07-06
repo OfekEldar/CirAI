@@ -538,7 +538,8 @@ with col_in:
                     st.success("Project loaded successfully!")
                 except Exception as e:
                     st.error(f"Error loading project: {e}")
-    analysis_request = st.text_input("Function to analyze (for example: Vout/Vin, Z(Vout) etc.):", value="Vout")
+    st.markdown("### Function to analyze (for example: Vout/Vin, Z(Vout) etc.):")
+    analysis_request = st.text_input("", value="Vout")
     input_method = st.radio(
         "Select Input Method:", 
         ["🖼️ Upload / Paste", "✏️ Draw Circuit", "📝 Netlist"], 
