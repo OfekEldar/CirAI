@@ -35,7 +35,7 @@ electrical_advisor_flag = 0
 derivation_steps_flag = 0
 img, topology, analysis_request, circuit_uses = None, None, None, None
 performance_advice, power_advice, noise_advice, component_advice, Recommended_articles_links = None, None, None, None, None
-model = genai.GenerativeModel('gemini-2.5-pro')
+model = genai.GenerativeModel('gemini-3.5-flash')
 
 def load_static_file(filename):
     """Load content from static file"""
@@ -521,6 +521,11 @@ if 'project_data' not in st.session_state:
         "feedbacks": [] 
     }
 st.title("CirAI | AI Circuit Analysis & Analog IC Design Copilot")
+model = st.radio("Model:", ["gemini 3.5 flash (fast model)", "gemini 3.1 pro (accurate model)"], horizontal=True)
+if model == "gemini 3.5 flash (fast model)":
+    model = genai.GenerativeModel('gemini-3.5-flash')
+if model == "gemini 3.1 pro (accurate model)":
+    model = genai.GenerativeModel('gemini-3.1-pro')
 if 'res' not in st.session_state:
     st.session_state['res'] = None
 col_in, col_out = st.columns([1, 2])
