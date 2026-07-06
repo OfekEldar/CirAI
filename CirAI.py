@@ -505,7 +505,8 @@ col_in, col_out = st.columns([1, 2])
 
 with col_in:
     st.header("1. Input (Image or Netlist)")
-    uploaded_file = st.file_uploader("Upload project file", type=["json"])
+    st.markdown("### Load a previously saved project (JSON):")
+    uploaded_file = st.file_uploader("", type=["json"])
     if uploaded_file is not None:
             file_content = uploaded_file.getvalue().decode("utf-8")
             if st.session_state.get('last_uploaded_file_content') != file_content:
