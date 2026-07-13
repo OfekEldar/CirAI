@@ -499,60 +499,12 @@ def open_desmos_calculator(formula,params):
     calculator_html = generate_calculator_html(z_init, params=[R_e, C_e])
     st.components.v1.html(calculator_html, height=600)
 
-# --- UI Helpers --- #
-
-def inject_theme():
-    st.markdown("""
-    <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-      :root{ --bg:#0b1220; --panel:#111c30; --panel-2:#0f1a2b; --text:#e6edf6; --muted:#9fb0c6;
-             --accent:#22d3ee; --accent-2:#3b82f6; --border:#1e2d45; }
-      .stApp{ background:radial-gradient(1200px 600px at 15% -10%, #13233d 0%, var(--bg) 55%);
-              color:var(--text); font-family:'Inter',system-ui,sans-serif; }
-      #MainMenu, footer {visibility:hidden;}
-      .cir-card{ background:linear-gradient(180deg,var(--panel),var(--panel-2)); border:1px solid var(--border);
-                 border-radius:16px; padding:1.15rem 1.25rem; margin-bottom:1.1rem;
-                 box-shadow:0 8px 30px rgba(0,0,0,.35); }
-      .cir-card h3{ margin-top:0; color:var(--text); font-weight:700; letter-spacing:.2px; }
-      .cir-eyebrow{ color:var(--accent); font-size:.72rem; font-weight:700;
-                    text-transform:uppercase; letter-spacing:.14em; margin-bottom:.3rem; }
-      .cir-header{ display:flex; align-items:center; gap:.8rem; padding:.4rem 0 1.1rem; }
-      .cir-logo{ font-size:2.1rem; font-weight:800;
-                 background:linear-gradient(90deg,var(--accent),var(--accent-2));
-                 -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-      .cir-sub{ color:var(--muted); font-size:.95rem; }
-      .stButton>button{ background:linear-gradient(90deg,var(--accent-2),var(--accent));
-                        color:#031017; border:0; border-radius:10px; font-weight:700; padding:.55rem 1rem;
-                        transition:transform .08s ease, box-shadow .2s ease; }
-      .stButton>button:hover{ transform:translateY(-1px); box-shadow:0 6px 18px rgba(34,211,238,.35); }
-      .stSlider [data-baseweb="slider"] div[role="slider"]{ background:var(--accent)!important;
-        box-shadow:0 0 0 4px rgba(34,211,238,.2); }
-      .stTextInput input, .stTextArea textarea{ background:var(--panel-2)!important;
-        color:var(--text)!important; border:1px solid var(--border)!important; border-radius:10px!important; }
-      .stTabs [data-baseweb="tab-list"]{ gap:.4rem; }
-      .stTabs [data-baseweb="tab"]{ background:var(--panel-2); border:1px solid var(--border);
-        border-radius:10px 10px 0 0; color:var(--muted); }
-      .stTabs [aria-selected="true"]{ color:var(--text)!important;
-        border-bottom:2px solid var(--accent)!important; }
-      .cir-skeleton{ border:1px dashed var(--border); border-radius:14px; padding:2.4rem 1.2rem;
-                     text-align:center; color:var(--muted);
-                     background:repeating-linear-gradient(115deg,#0f1a2b,#0f1a2b 12px,#101d31 12px,#101d31 24px); }
-    </style>""", unsafe_allow_html=True)
-
-def card_open(title, eyebrow=""):
-    eb = f'<div class="cir-eyebrow">{eyebrow}</div>' if eyebrow else ""
-    st.markdown(f'<div class="cir-card">{eb}<h3>{title}</h3>', unsafe_allow_html=True)
-
-def card_close():
-    st.markdown('</div>', unsafe_allow_html=True)
-
 # --- GUI --- #
 st.set_page_config(
     page_title="CirAI | AI Circuit Analysis & Analog IC Design Copilot",
     page_icon="⚡",
     layout="wide"
 )
-inject_theme()
 #connection()
 if 'project_data' not in st.session_state:
     st.session_state['project_data'] = {
@@ -565,15 +517,7 @@ if 'project_data' not in st.session_state:
         "bug_res": None,
         "feedbacks": [] 
     }
-st.markdown("""
-  <div class="cir-header">
-    <span class="cir-logo">⚡ cirAI</span>
-    <div>
-      <div style="font-weight:700;font-size:1.05rem;color:var(--text);">AI Circuit Analysis &amp; Analog IC Design Copilot</div>
-      <div class="cir-sub">Image / netlist → symbolic transfer function → live Desmos Bode simulation</div>
-    </div>
-  </div>
-""", unsafe_allow_html=True)
+st.title("CirAI | AI Circuit Analysis & Analog IC Design Copilot")
 model = st.radio("Model:", ["gemini 3.5 flash (fast model)", "gemini 3.1 pro (accurate model)"], horizontal=True)
 if model == "gemini 3.5 flash (fast model)":
     model = genai.GenerativeModel('gemini-3.5-flash')
@@ -584,7 +528,7 @@ if 'res' not in st.session_state:
 col_in, col_out = st.columns([1, 2])
 
 with col_in:
-    card_open("Input Visualization", "Card 1 · Circuit Input")
+    st.header("1. Input (Image or Netlist)")
     st.markdown("### Load a previously saved project (JSON):")
     uploaded_file = st.file_uploader("", type=["json"])
     if uploaded_file is not None:
@@ -787,38 +731,27 @@ with col_in:
             if not img and not netlist_content:
                 st.error("Please provide an image, draw a circuit, or input a netlist first.")
             else:
-                st.toast("Analyzing circuit…", icon="🔬")
                 with st.spinner("Analyzing the circuit..."):
                     st.session_state['project_data']['analysis_request'] = analysis_request
                     st.session_state['project_data']['img'] = img
                     st.session_state['project_data']['netlist_text'] = netlist_content
                     res = analyze_circuit(img, netlist_content, analysis_request, derivation_steps_flag)
                     st.session_state['project_data']['res'] = res
-                st.toast("Equation generated ✅", icon="✨")
-    card_close()
 
 with col_out:
+    st.header("2. Circuit Analysis")
+    st.info("**Quick Guide:**\n\n"
+            "1. **Verify:** Check the formula below matches your circuit diagram.\n"
+            "2. **Edit Freely:** All expressions in Desmos can be modified manually.\n"
+            "3. **Complex Mode:** For S-domain ($s=j\\omega$), go to Settings (Wrench) -> Enable 'Complex Mode'.\n"
+            "4. **Bode Plots:** In Settings -> More Options, switch axes to 'Logarithmic'.\n"
+            "5. **Analysis Commands:** Use `|Z|` (Mag), `angle(Z)` (Phase), `real(Z)` (R), and `imag(Z)` (X).\n"
+            "6. **Tuning:** Enter values for $g_m, r_o, C$. Delete a parameter's definition to auto-generate a Slider.\n"
+            "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \\pi x$.\n"
+            "8. **Axis scaling:** To change the scale of the axes, press shift and point to a specific axis, X-axis or Y-axis. Then change the size using the mouse wheel."
+            )
     res = st.session_state['project_data'].get('res')
     if not res:
-        card_open("Analytical Engine Output", "Card 2 · Transfer Function")
-        st.markdown("""
-          <div class="cir-skeleton">
-            <div style="font-size:1.5rem;">📐</div>
-            <b>No circuit analyzed yet</b><br/><br/>
-            Upload an image or netlist, set the target function, then hit <b>Analyze Circuit</b>.
-          </div>""", unsafe_allow_html=True)
-        card_close()
-        card_open("Interactive Simulation", "Card 3 · Desmos Engine")
-        st.info("**Quick Guide:**\n\n"
-                "1. **Verify:** Check the formula below matches your circuit diagram.\n"
-                "2. **Edit Freely:** All expressions in Desmos can be modified manually.\n"
-                "3. **Complex Mode:** For S-domain ($s=j\\omega$), go to Settings (Wrench) -> Enable 'Complex Mode'.\n"
-                "4. **Bode Plots:** In Settings -> More Options, switch axes to 'Logarithmic'.\n"
-                "5. **Analysis Commands:** Use `|Z|` (Mag), `angle(Z)` (Phase), `real(Z)` (R), and `imag(Z)` (X).\n"
-                "6. **Tuning:** Enter values for $g_m, r_o, C$. Delete a parameter's definition to auto-generate a Slider.\n"
-                "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \\pi x$.\n"
-                "8. **Axis scaling:** To change the scale of the axes, press shift and point to a specific axis, X-axis or Y-axis. Then change the size using the mouse wheel."
-                )
         z_init = """H(s) = 1/(1+R_{e}C_{e}s)"""
         example_img = "LPF.jpg"
         st.image(example_img, caption="Example circuit analysis", width=350)
@@ -826,7 +759,6 @@ with col_out:
         C_e = {"name": "C_e", "value": "1p", "min": "1f", "max": "10p", "step": "0.1p"}
         calculator_html = generate_calculator_html(z_init, params=[R_e, C_e])
         st.components.v1.html(calculator_html, height=600)
-        card_close()
     else:
         res = st.session_state['project_data'].get('res')
         z_latex = res.get('H_latex', '0')
@@ -852,22 +784,11 @@ with col_out:
                             new_val = opt_dict[raw_name]
                         if new_val is not None:
                             p['value'] = str(new_val)
-
-        # Card 2: Analytical Engine Output
-        card_open("Analytical Engine Output", "Card 2 · Transfer Function")
-        st.info("**Quick Guide:**\n\n"
-                "1. **Verify:** Check the formula below matches your circuit diagram.\n"
-                "2. **Edit Freely:** All expressions in Desmos can be modified manually.\n"
-                "3. **Complex Mode:** For S-domain ($s=j\\omega$), go to Settings (Wrench) -> Enable 'Complex Mode'.\n"
-                "4. **Bode Plots:** In Settings -> More Options, switch axes to 'Logarithmic'.\n"
-                "5. **Analysis Commands:** Use `|Z|` (Mag), `angle(Z)` (Phase), `real(Z)` (R), and `imag(Z)` (X).\n"
-                "6. **Tuning:** Enter values for $g_m, r_o, C$. Delete a parameter's definition to auto-generate a Slider.\n"
-                "7. **Note:** Frequency ($f$) is represented by $x$; $s$ is pre-defined as $j 2 \\pi x$.\n"
-                "8. **Axis scaling:** To change the scale of the axes, press shift and point to a specific axis, X-axis or Y-axis. Then change the size using the mouse wheel."
-                )
         st.success(f"**Topology:** {res.get('topology')}")
         st.latex(rf"\large {H_latex_formula}")
         st.markdown("---")
+        st.info("**Debugging:** Open browser console (F12) to see detailed calculator initialization logs and verify settings are applied correctly.")
+
         with st.expander("Watch full development"):
             st.write("Analysis process:")
             st.markdown(res.get('derivation_steps', "Not found"))
@@ -901,23 +822,10 @@ with col_out:
             if 'R' in detected_params:
                 st.markdown("**Resistor (Thermal Noise):**")
                 st.latex(r"\overline{V_n^2} = 4k_B T R \cdot \Delta f")
-        card_close()
-
-        # Card 3: Interactive Simulation
-        card_open("Interactive Simulation", "Card 3 · Desmos Engine")
-        tab_graph, tab_raw = st.tabs(["📈 Interactive Desmos Graph", "🧾 Raw Netlist / Analytics"])
-        with tab_graph:
-            if st.button("Check for Bugs", use_container_width=True):
-                st.toast("Running bug check…", icon="🐛")
-                check_bugs(img, topology, H_latex_formula, analysis_request)
-            calculator_html = generate_calculator_html(st.session_state['project_data']['res'].get('H_latex_formula', '0'), params)
-            st.components.v1.html(calculator_html, height=600)
-            st.info("**Debugging:** Open browser console (F12) to see detailed calculator initialization logs and verify settings are applied correctly.")
-        with tab_raw:
-            st.code(st.session_state['project_data'].get('netlist_text') or "No netlist provided", language="spice")
-            st.json({"topology": topology, "params": original_params, "H_latex": z_latex})
-        card_close()
-
+        if st.button("Check for Bugs", use_container_width=True):
+            check_bugs(img, topology, H_latex_formula, analysis_request)
+        calculator_html = generate_calculator_html(st.session_state['project_data']['res'].get('H_latex_formula', '0'), params)
+        st.components.v1.html(calculator_html, height=600)
         st.markdown("---")
         st.markdown(
             """
@@ -945,7 +853,6 @@ with col_out:
                         st.session_state['project_data']['advisor_res'] = electrical_advisor(img, topology, analysis_request, circuit_uses)
         with col_btn2:
                     if st.button("⚡ Optimize Parameters", use_container_width=True):
-                        st.toast("Optimizing parameters…", icon="⚡")
                         opt_result = optimize_circuit(params, img, H_latex_formula, analysis_request, circuit_uses)
                         if opt_result:
                             st.session_state['project_data']['opt_res'] = opt_result
