@@ -52,6 +52,18 @@ class DesmosCalculatorManager {
         this.isFullyReady = false;
     }
 
+    enableComplexMode() {
+        try {
+            let state = this.calculator.getState();
+            if (!state.graph) state.graph = {};
+            state.graph.complexMode = true;
+            this.calculator.setState(state, {allowUndo: true});
+            console.log('Complex Mode enabled');
+        } catch (error) {
+            console.error('Error enabling Complex Mode:', error);
+        }
+    }
+
     init() {
         console.log('Initializing Desmos Calculator...');
         const element = document.getElementById(this.elementId);
@@ -60,10 +72,7 @@ class DesmosCalculatorManager {
             return;
         }
         this.calculator = Desmos.GraphingCalculator(element, CALCULATOR_CONFIG);
-        let state = this.calculator.getState();
-        if (!state.graph) state.graph = {};
-        state.graph.complexMode = true;
-        this.calculator.setState(state);
+        this.enableComplexMode();
         window.desmosCalc = this.calculator;
         console.log('Calculator object available as window.desmosCalc for debugging');
         this.applySettings();
@@ -121,6 +130,12 @@ class DesmosCalculatorManager {
         console.log('Degree Mode:', this.calculator.settings.degreeMode);
         console.log('X Axis Scale:', this.calculator.settings.xAxisScale);
         console.log('Y Axis Scale:', this.calculator.settings.yAxisScale);
+        try {
+            const state = this.calculator.getState();
+            console.log('Complex Mode:', state.graph ? state.graph.complexMode : undefined);
+        } catch (error) {
+            console.error('Error reading Complex Mode status:', error);
+        }
         console.log(`Math bounds should now be: left=${DEFAULT_BOUNDS.left}, right=${DEFAULT_BOUNDS.right}, bottom=${DEFAULT_BOUNDS.bottom}, top=${DEFAULT_BOUNDS.top}`);
     }
 
@@ -137,6 +152,7 @@ class DesmosCalculatorManager {
                 
                 // Unit definitions
                 this.addUnitDefinitions();
+                this.enableComplexMode();
                 
                 console.log('All expressions added successfully!');
                 this.isFullyReady = true;
@@ -216,9 +232,11 @@ class DesmosCalculatorManager {
                 console.error(`Unit ${index + 1} failed:`, e);
             }
         });
-        let state = calculator.getState();
+        let state = this.calculator.getState();
+        if (!state.graph) state.graph = {};
+        state.graph.complexMode = true;
         state.expressions.list = state.expressions.list.concat(UNIT_DEFINITIONS);
-        calculator.setState(state);
+        this.calculator.setState(state);
     }
 
 
@@ -237,6 +255,5 @@ function initializeCalculator(zLatex, params=[]) {
     return manager;
 
 }
-
 
 
